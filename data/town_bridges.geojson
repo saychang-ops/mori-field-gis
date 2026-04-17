@@ -1,0 +1,1097 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.63411,
+          41.99992
+        ]
+      },
+      "properties": {
+        "name": "宿野辺川橋",
+        "furigana": "(ｼｭｸﾉﾍﾞｶﾜﾊｼ)",
+        "route_name": "町道赤井川５号線",
+        "bridge_length": 10.2,
+        "width": 3.5,
+        "built_year": "1975",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "41.99992,140.63411"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.64025,
+          42.00573
+        ]
+      },
+      "properties": {
+        "name": "第２赤井川橋",
+        "furigana": "(ﾀﾞｲﾆｱｶｲｶﾞﾜﾊｼ)",
+        "route_name": "町道赤井川８号線",
+        "bridge_length": 12.5,
+        "width": 4.5,
+        "built_year": "1970",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.00573,140.64025"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.60339,
+          42.01233
+        ]
+      },
+      "properties": {
+        "name": "第２白川橋",
+        "furigana": "(ﾀﾞｲﾆｼﾗｶﾜﾊｼ)",
+        "route_name": "町道白川１号線",
+        "bridge_length": 9.5,
+        "width": 11.0,
+        "built_year": "1970",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.01233,140.60339"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.62989,
+          42.01233
+        ]
+      },
+      "properties": {
+        "name": "赤井川橋",
+        "furigana": "(ｱｶｲｶﾞﾜﾊｼ)",
+        "route_name": "町道駒ヶ岳赤井川線",
+        "bridge_length": 39.0,
+        "width": 10.0,
+        "built_year": "2006",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.01233,140.62989"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.61828,
+          42.01653
+        ]
+      },
+      "properties": {
+        "name": "第３赤井川橋",
+        "furigana": "(ﾀﾞｲｻﾝｱｶｲｶﾞﾜﾊｼ)",
+        "route_name": "町道赤井川６号線",
+        "bridge_length": 22.7,
+        "width": 4.0,
+        "built_year": "1991",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.01653,140.61828"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.61642,
+          42.02286
+        ]
+      },
+      "properties": {
+        "name": "第２駒ヶ岳橋",
+        "furigana": "(ﾀﾞｲﾆｺﾏｶﾞﾀｹﾊｼ)",
+        "route_name": "町道駒ヶ岳１０号線",
+        "bridge_length": 17.9,
+        "width": 5.0,
+        "built_year": "1992",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.02286,140.61642"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.61597,
+          42.02622
+        ]
+      },
+      "properties": {
+        "name": "第１板小屋橋",
+        "furigana": "(ﾀﾞｲｲﾁｲﾀｺﾔﾊｼ)",
+        "route_name": "町道駒ヶ岳４号線",
+        "bridge_length": 4.5,
+        "width": 5.3,
+        "built_year": "1971",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.02622,140.61597"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.61,
+          42.03007
+        ]
+      },
+      "properties": {
+        "name": "第２板小屋橋",
+        "furigana": "(ﾀﾞｲﾆｲﾀｺﾔﾊｼ)",
+        "route_name": "町道駒ヶ岳５号線",
+        "bridge_length": 8.4,
+        "width": 5.0,
+        "built_year": "1987",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.03007,140.61000"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.60633,
+          42.0313
+        ]
+      },
+      "properties": {
+        "name": "第３板小屋橋",
+        "furigana": "(ﾀﾞｲｻﾝｲﾀｺﾔﾊｼ)",
+        "route_name": "町道駒ヶ岳１号線",
+        "bridge_length": 3.5,
+        "width": 4.0,
+        "built_year": "2007",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.03130,140.60633"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.60342,
+          42.03534
+        ]
+      },
+      "properties": {
+        "name": "第一精進川橋",
+        "furigana": "(ﾀﾞｲｲﾁｼｮｳｼﾞﾝｶﾜﾊｼ)",
+        "route_name": "駒ヶ岳1号線",
+        "bridge_length": 10.9,
+        "width": 5.7,
+        "built_year": "2019",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.03534,140.60342"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.484,
+          42.03739
+        ]
+      },
+      "properties": {
+        "name": "元山橋",
+        "furigana": "(ﾓﾄﾔﾏﾊｼ)",
+        "route_name": "町道森厚沢部線",
+        "bridge_length": 18.5,
+        "width": 3.6,
+        "built_year": "1960",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.03739,140.48400"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.61712,
+          42.03909
+        ]
+      },
+      "properties": {
+        "name": "第３駒ヶ岳橋",
+        "furigana": "(ﾀﾞｲｻﾝｺﾏｶﾞﾀｹﾊｼ)",
+        "route_name": "町道駒ヶ岳２号線",
+        "bridge_length": 10.4,
+        "width": 6.5,
+        "built_year": "1986",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.03909,140.61712"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.59461,
+          42.04741
+        ]
+      },
+      "properties": {
+        "name": "駒ヶ岳第二跨道橋",
+        "furigana": "(ｺﾏｶﾞﾀｹﾀﾞｲﾆｺﾄﾞｳｷｮｳ)",
+        "route_name": "町道駒ヶ岳１６号線",
+        "bridge_length": 68.2,
+        "width": 5.0,
+        "built_year": "2011",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.04741,140.59461"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.59011,
+          42.05157
+        ]
+      },
+      "properties": {
+        "name": "駒ヶ岳第三跨道橋",
+        "furigana": "(ｺﾏｶﾞﾀｹﾀﾞｲｻﾝｺﾄﾞｳｷｮｳ)",
+        "route_name": "町道駒ヶ岳１３号線",
+        "bridge_length": 68.0,
+        "width": 4.0,
+        "built_year": "2011",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.05157,140.59011"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.60113,
+          42.06881
+        ]
+      },
+      "properties": {
+        "name": "ブリッチ姫川",
+        "furigana": "(ﾌﾞﾘｯﾁﾋﾒｶﾜ)",
+        "route_name": "町道姫川５号線",
+        "bridge_length": 211.3,
+        "width": 7.0,
+        "built_year": "1994",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.06881,140.60113"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.51364,
+          42.07043
+        ]
+      },
+      "properties": {
+        "name": "虹かけ橋",
+        "furigana": "(ﾆｼﾞｶｹﾊｼ)",
+        "route_name": "町道霞台１号線",
+        "bridge_length": 20.0,
+        "width": 3.6,
+        "built_year": "1995",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.07043,140.51364"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.58431,
+          42.07242
+        ]
+      },
+      "properties": {
+        "name": "第一三十屋川橋",
+        "furigana": "(ﾀﾞｲｲﾁﾐｿﾔｶﾜﾊｼ)",
+        "route_name": "町道森川町姫川１号線",
+        "bridge_length": 2.0,
+        "width": 4.6,
+        "built_year": "1962",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.07242,140.58431"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.579,
+          42.07661
+        ]
+      },
+      "properties": {
+        "name": "第５中の川橋",
+        "furigana": "(ﾀﾞｲｺﾞﾅｶﾉｶﾜﾊｼ)",
+        "route_name": "町道森川町姫川１号線",
+        "bridge_length": 2.0,
+        "width": 4.6,
+        "built_year": "1963",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.07661,140.57900"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.59614,
+          42.08511
+        ]
+      },
+      "properties": {
+        "name": "第２尾白内川橋",
+        "furigana": "(ﾀﾞｲﾆｵｼﾛﾅｲｶﾜﾊｼ)",
+        "route_name": "町道栄町駒ヶ岳線",
+        "bridge_length": 33.3,
+        "width": 7.5,
+        "built_year": "1990",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.08511,140.59614"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.59914,
+          42.08961
+        ]
+      },
+      "properties": {
+        "name": "開運橋",
+        "furigana": "(ｶｲｳﾝﾊｼ)",
+        "route_name": "町道森川町白川線",
+        "bridge_length": 37.8,
+        "width": 9.5,
+        "built_year": "1992",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.08961,140.59914"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.56592,
+          42.09018
+        ]
+      },
+      "properties": {
+        "name": "上台橋",
+        "furigana": "(ｳﾜﾀﾞｲﾊｼ)",
+        "route_name": "町道上台葬苑線",
+        "bridge_length": 55.0,
+        "width": 6.5,
+        "built_year": "2005",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.09018,140.56592"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.58707,
+          42.09535
+        ]
+      },
+      "properties": {
+        "name": "第４中の川橋",
+        "furigana": "(ﾀﾞｲﾖﾝﾅｶﾉｶﾜﾊｼ)",
+        "route_name": "町道森川町白川線",
+        "bridge_length": 21.3,
+        "width": 9.5,
+        "built_year": "1988",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.09535,140.58707"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.57539,
+          42.0992
+        ]
+      },
+      "properties": {
+        "name": "桜公園橋",
+        "furigana": "(ｻｸﾗｺｳｴﾝﾊｼ)",
+        "route_name": "町道清澄町７号線",
+        "bridge_length": 17.0,
+        "width": 8.7,
+        "built_year": "1992",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.09920,140.57539"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.75506,
+          42.09947
+        ]
+      },
+      "properties": {
+        "name": "相泊橋",
+        "furigana": "(ｱｲﾄﾞﾏﾘﾊｼ)",
+        "route_name": "町道砂原東１０号線",
+        "bridge_length": 5.3,
+        "width": 4.5,
+        "built_year": "1972",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.09947,140.75506"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.578,
+          42.10261
+        ]
+      },
+      "properties": {
+        "name": "第二清澄橋",
+        "furigana": "(ﾀﾞｲﾆｷﾖｽﾞﾐﾊｼ)",
+        "route_name": "町道清澄町２号線",
+        "bridge_length": 9.5,
+        "width": 5.1,
+        "built_year": "1970",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.10261,140.57800"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.584191469105,
+          42.103470461602605
+        ]
+      },
+      "properties": {
+        "name": "第２中の川橋",
+        "furigana": "(ﾀﾞｲﾆﾅｶﾉｶﾜﾊｼ)",
+        "route_name": "町道新川町１号線",
+        "bridge_length": 22.2,
+        "width": 4.5,
+        "built_year": "1990",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.10339,140.58419"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.5841468132765,
+          42.10474365394431
+        ]
+      },
+      "properties": {
+        "name": "常盤橋",
+        "furigana": "(ﾄｷﾜﾊｼ)",
+        "route_name": "町道常磐町１号線",
+        "bridge_length": 25.0,
+        "width": 8.0,
+        "built_year": "1988",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.10348,140.58420"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.75697,
+          42.10492
+        ]
+      },
+      "properties": {
+        "name": "鍛冶屋川橋",
+        "furigana": "(ｶｼﾞﾔｶﾜﾊｼ)",
+        "route_name": "町道砂原東１０号線",
+        "bridge_length": 15.5,
+        "width": 4.5,
+        "built_year": "1972",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.10492,140.75697"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.58658,
+          42.10567
+        ]
+      },
+      "properties": {
+        "name": "第一中の川橋",
+        "furigana": "(ﾀﾞｲｲﾁﾅｶﾉｶﾜﾊｼ)",
+        "route_name": "町道新川町１号線",
+        "bridge_length": 22.7,
+        "width": 5.0,
+        "built_year": "1985",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.10567,140.58658"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.57892,
+          42.10614
+        ]
+      },
+      "properties": {
+        "name": "新橋",
+        "furigana": "(ｼﾝﾊｼ)",
+        "route_name": "町道御幸町５号線",
+        "bridge_length": 4.0,
+        "width": 6.2,
+        "built_year": "1962",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.10614,140.57892"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.57967,
+          42.10662
+        ]
+      },
+      "properties": {
+        "name": "中央橋",
+        "furigana": "(ﾁｭｳｵｳﾊｼ)",
+        "route_name": "町道御幸町２号線",
+        "bridge_length": 5.5,
+        "width": 12.0,
+        "built_year": "1963",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.10662,140.57967"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.71792,
+          42.10712
+        ]
+      },
+      "properties": {
+        "name": "イラ沢橋",
+        "furigana": "(ｲﾗｻﾜﾊｼ)",
+        "route_name": "町道砂原東４号線",
+        "bridge_length": 32.8,
+        "width": 7.5,
+        "built_year": "1984",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.10712,140.71792"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.58017,
+          42.10736
+        ]
+      },
+      "properties": {
+        "name": "新川橋",
+        "furigana": "(ｼﾝｶﾜﾊｼ)",
+        "route_name": "町道御幸町１号線",
+        "bridge_length": 13.0,
+        "width": 7.5,
+        "built_year": "1995",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.10736,140.58017"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.43862,
+          42.10951
+        ]
+      },
+      "properties": {
+        "name": "第一中の川橋",
+        "furigana": "(ﾀﾞｲｲﾁﾅｶﾉｶﾜﾊｼ)",
+        "route_name": "町道濁川１４号線",
+        "bridge_length": 26.1,
+        "width": 6.5,
+        "built_year": "1985",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.10951,140.43862"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.4532,
+          42.11168
+        ]
+      },
+      "properties": {
+        "name": "澄川大橋",
+        "furigana": "(ｽﾐｶﾜｵｵﾊｼ)",
+        "route_name": "町道濁川４号線",
+        "bridge_length": 30.0,
+        "width": 4.0,
+        "built_year": "1973",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.11168,140.45320"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.64217,
+          42.1118
+        ]
+      },
+      "properties": {
+        "name": "二ツ山押出１号橋",
+        "furigana": "(ﾌﾀﾂﾔﾏｵｼﾀﾞｼｲﾁｺﾞｳﾊｼ)",
+        "route_name": "町道砂原東４号線",
+        "bridge_length": 3.2,
+        "width": 7.0,
+        "built_year": "1983",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.11180,140.64217"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.63744,
+          42.11207
+        ]
+      },
+      "properties": {
+        "name": "二ツ山押出２号橋",
+        "furigana": "(ﾌﾀﾂﾔﾏｵｼﾀﾞｼﾆｺﾞｳﾊｼ)",
+        "route_name": "町道砂原東４号線",
+        "bridge_length": 2.9,
+        "width": 7.0,
+        "built_year": "1983",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.11207,140.63744"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.44397,
+          42.11277
+        ]
+      },
+      "properties": {
+        "name": "第１灌漑橋",
+        "furigana": "(ﾀﾞｲｲﾁｶﾝｶﾞｲﾊｼ)",
+        "route_name": "町道濁川１号線",
+        "bridge_length": 2.3,
+        "width": 4.5,
+        "built_year": "2002",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.11277,140.44397"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.44383,
+          42.11571
+        ]
+      },
+      "properties": {
+        "name": "中の川橋",
+        "furigana": "(ﾅｶﾉｶﾜﾊｼ)",
+        "route_name": "町道濁川１号線",
+        "bridge_length": 7.5,
+        "width": 5.0,
+        "built_year": "1969",
+        "health_rating": "III（早期措置）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.11571,140.44383"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.66214,
+          42.11845
+        ]
+      },
+      "properties": {
+        "name": "さわら中央跨線橋",
+        "furigana": "(ｻﾜﾗﾁｭｳｵｳｺｾﾝｷｮｳ)",
+        "route_name": "町道砂原西線",
+        "bridge_length": 15.1,
+        "width": 7.5,
+        "built_year": "2003",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.11845,140.66214"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.53867,
+          42.11874
+        ]
+      },
+      "properties": {
+        "name": "桂川橋",
+        "furigana": "(ｶﾂﾗｶﾞﾜﾊｼ)",
+        "route_name": "町道鷲ノ木町２号線",
+        "bridge_length": 12.8,
+        "width": 7.1,
+        "built_year": "1945",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.11874,140.53867"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.44717,
+          42.12179
+        ]
+      },
+      "properties": {
+        "name": "中野川橋",
+        "furigana": "(ﾅｶﾉｶﾜﾊｼ)",
+        "route_name": "町道濁川４号線",
+        "bridge_length": 4.6,
+        "width": 5.5,
+        "built_year": "1972",
+        "health_rating": "III（早期措置）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.12179,140.44717"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.4506,
+          42.12663
+        ]
+      },
+      "properties": {
+        "name": "名稲穂橋",
+        "furigana": "(ﾒｲｲﾅﾎﾊｼ)",
+        "route_name": "町道濁川９号線",
+        "bridge_length": 6.5,
+        "width": 5.0,
+        "built_year": "1972",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.12663,140.45060"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.44264,
+          42.12693
+        ]
+      },
+      "properties": {
+        "name": "第２新栄橋",
+        "furigana": "(ﾀﾞｲﾆｼﾝｴｲﾊｼ)",
+        "route_name": "町道濁川２号線",
+        "bridge_length": 7.1,
+        "width": 5.5,
+        "built_year": "1987",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.12693,140.44264"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.51661,
+          42.12768
+        ]
+      },
+      "properties": {
+        "name": "カド川橋",
+        "furigana": "(ｶﾄﾞｶﾜﾊｼ)",
+        "route_name": "町道蛯谷海岸線",
+        "bridge_length": 5.0,
+        "width": 7.6,
+        "built_year": "2017",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.12768,140.51661"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.51414,
+          42.12823
+        ]
+      },
+      "properties": {
+        "name": "第２蛯谷橋",
+        "furigana": "(ﾀﾞｲﾆｴﾋﾞﾔﾊｼ)",
+        "route_name": "町道蛯谷町４号線",
+        "bridge_length": 7.1,
+        "width": 3.0,
+        "built_year": "2000",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.12823,140.51414"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.44169,
+          42.12835
+        ]
+      },
+      "properties": {
+        "name": "新栄橋",
+        "furigana": "(ｼﾝｴｲﾊｼ)",
+        "route_name": "町道濁川２号線",
+        "bridge_length": 8.4,
+        "width": 5.5,
+        "built_year": "1987",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.12835,140.44169"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.51472,
+          42.12866
+        ]
+      },
+      "properties": {
+        "name": "蛯谷橋",
+        "furigana": "(ｴﾋﾞﾔﾊｼ)",
+        "route_name": "町道蛯谷海岸線",
+        "bridge_length": 7.3,
+        "width": 5.0,
+        "built_year": "1970",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.12866,140.51472"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.47979,
+          42.14106
+        ]
+      },
+      "properties": {
+        "name": "第１濁川橋",
+        "furigana": "ﾀﾞｲｲﾁﾆｺﾞﾘｶﾜﾊｼ",
+        "route_name": "濁川１１号線",
+        "bridge_length": 6.3,
+        "width": 5.0,
+        "built_year": "1960",
+        "health_rating": "III（早期措置）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.14106,140.47979"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.42501,
+          42.14533
+        ]
+      },
+      "properties": {
+        "name": "美岱橋",
+        "furigana": "(ﾐﾀｲﾊｼ)",
+        "route_name": "町道三岱１号線",
+        "bridge_length": 74.3,
+        "width": 6.0,
+        "built_year": "2009",
+        "health_rating": "I（健全）",
+        "inspection_year": 2021,
+        "shisetsu_id": "42.14533,140.42501"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.4545,
+          42.16991
+        ]
+      },
+      "properties": {
+        "name": "三岱橋",
+        "furigana": "(ｻﾝﾀｲﾊｼ)",
+        "route_name": "町道三岱１号線",
+        "bridge_length": 44.7,
+        "width": 7.5,
+        "built_year": "2006",
+        "health_rating": "I（健全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.16991,140.45450"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          140.45639,
+          42.17599
+        ]
+      },
+      "properties": {
+        "name": "ポンナイ橋",
+        "furigana": "(ﾎﾟﾝﾅｲﾊｼ)",
+        "route_name": "町道石倉町１号線",
+        "bridge_length": 5.5,
+        "width": 7.5,
+        "built_year": "1945",
+        "health_rating": "II（予防保全）",
+        "inspection_year": 2022,
+        "shisetsu_id": "42.17599,140.45639"
+      }
+    }
+  ]
+}
