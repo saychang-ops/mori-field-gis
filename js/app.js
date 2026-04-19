@@ -2,7 +2,7 @@ import { CONFIG } from './config.js';
 import { initMap, getMap, toggleBasemap } from './map.js';
 import { loadTownRoads, loadTownBridges } from './layers.js';
 import { centerOnCurrentLocation, startWatching } from './gps.js';
-import { initMemoLayer, addAtCurrentLocation, addNewPoint } from './register.js';
+import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode } from './register.js';
 import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 
@@ -79,7 +79,7 @@ function showAddMenu() {
     } else if (action === 'tap') {
       enableTapToAddMode();
     } else if (action === 'line') {
-      showToast('線描画モードは v0.3.0 で実装予定', 'warning');
+      startLineMode();
     }
   });
 }

@@ -136,3 +136,113 @@ function rebuildMemoLayer() {
 
 window.__editMemo = editMemoById;
 window.__deleteMemo = deleteMemoById;
+
+let lineMode = null;
+let lineHandlersWired = false;
+
+export function startLineMode() {
+  const map = getMap();
+  if (lineMode) return;
+  lineMode = {
+    vertices: [],
+    previewLine: null,
+    vertexMarkers: []
+  };
+  document.getElementById('line-mode-bar').classList.remove('hidden');
+  map.on('click', onLineTap);
+  if (!lineHandlersWired) {
+    document.getElementById('line-undo').addEventListener('click', undoVertex);
+    document.getElementById('line-cancel').addEventListener('click', cancelLineMode);
+    lineHandlersWired = true;
+  }
+  showToast('地図をタップして頂点を追加', 'success');
+}
+
+function onLineTap(e) {
+  if (!lineMode) return;
+  const map = getMap();
+  lineMode.vertices.push(e.latlng);
+
+  const marker = L.circleMarker(e.latlng, {
+    color: '#e53935', fillColor: '#e53935', fillOpacity: 1,
+    radius: 6, weight: 2
+  }).addTo(map);
+
+  if (lineMode.vertices.length >= 2) {
+    attachLongPress(marker);
+  }
+  lineMode.vertexMarkers.push(marker);
+
+  if (lineMode.previewLine) map.removeLayer(lineMode.previewLine);
+  if (lineMode.vertices.length >= 2) {
+    lineMode.previewLine = L.polyline(lineMode.vertices, {
+      color: '#e53935', weight: 3, opacity: 0.7, dashArray: '6,6'
+    }).addTo(map);
+  }
+}
+
+function attachLongPress(marker) {
+  let timer = null;
+  const start = () => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => { confirmLine(); }, CONFIG.longPress.durationMs);
+  };
+  const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
+  marker.on('mousedown', start);
+  marker.on('touchstart', start);
+  marker.on('mouseup mouseout touchend touchcancel', clear);
+}
+
+function undoVertex() {
+  if (!lineMode || lineMode.vertices.length === 0) return;
+  const map = getMap();
+  lineMode.vertices.pop();
+  const m = lineMode.vertexMarkers.pop();
+  if (m) map.removeLayer(m);
+  if (lineMode.previewLine) {
+    map.removeLayer(lineMode.previewLine);
+    lineMode.previewLine = null;
+  }
+  if (lineMode.vertices.length >= 2) {
+    lineMode.previewLine = L.polyline(lineMode.vertices, {
+      color: '#e53935', weight: 3, opacity: 0.7, dashArray: '6,6'
+    }).addTo(map);
+  }
+}
+
+function confirmLine() {
+  if (!lineMode || lineMode.vertices.length < 2) {
+    showToast('頂点が足りません（2点以上必要）', 'warning');
+    return;
+  }
+  const coords = lineMode.vertices.map(v => [v.lng, v.lat]);
+  openMemoForm({
+    geometry: { type: 'LineString', coordinates: coords },
+    onSave: (feature) => {
+      const memos = loadMemos();
+      memos.push(feature);
+      const result = saveMemos(memos);
+      if (!result.ok) { showToast('保存失敗: ' + result.message, 'error'); return; }
+      renderMemo(feature);
+      updateMemoCount();
+      cleanupLineMode();
+      showToast('線を保存しました', 'success');
+    }
+  });
+}
+
+function cancelLineMode() {
+  if (!lineMode) return;
+  if (lineMode.vertices.length > 0 && !confirm('線描画をキャンセルしますか？')) return;
+  cleanupLineMode();
+}
+
+function cleanupLineMode() {
+  if (!lineMode) return;
+  const map = getMap();
+  map.off('click', onLineTap);
+  lineMode.vertexMarkers.forEach(m => map.removeLayer(m));
+  if (lineMode.previewLine) map.removeLayer(lineMode.previewLine);
+  document.getElementById('line-mode-bar').classList.add('hidden');
+  lineMode = null;
+}

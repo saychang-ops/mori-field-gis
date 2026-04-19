@@ -23,6 +23,12 @@
     <button id="share-btn" aria-label="共有" title="エクスポート">⬆</button>
   </header>
 
+  <div id="line-mode-bar" class="hidden">
+    <span>線描画中（最終頂点を長押しで確定）</span>
+    <button id="line-undo">← 戻る</button>
+    <button id="line-cancel">キャンセル</button>
+  </div>
+
   <main id="map-container">
     <div id="map"></div>
     <div id="fab-stack">
@@ -73,7 +79,7 @@
   <div id="toast-container"></div>
 
   <footer id="app-footer">
-    <span>森町建設課GIS (Field) <span id="version-label">v0.2.0</span></span>
+    <span>森町建設課GIS (Field) <span id="version-label">v0.3.0</span></span>
     <span id="memo-count">0件</span>
   </footer>
 
