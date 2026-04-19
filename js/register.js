@@ -7,8 +7,10 @@ import { showToast } from './toast.js';
 import { setTownLayersInteractive } from './layers.js';
 
 let memoLayerGroup = null;
+let memoRenderer = null;
 
 export function initMemoLayer(map) {
+  memoRenderer = L.canvas({ pane: 'memoPane', tolerance: 15 });
   memoLayerGroup = L.layerGroup().addTo(map);
   const memos = loadMemos();
   memos.forEach(renderMemo);
@@ -26,10 +28,15 @@ function renderMemo(feature) {
       layer = L.circleMarker([lat, lng], {
         color, fillColor: color, fillOpacity: 0.85,
         radius: CONFIG.style.fieldMemoPoint.radius,
-        weight: CONFIG.style.fieldMemoPoint.weight
+        weight: CONFIG.style.fieldMemoPoint.weight,
+        pane: 'memoPane',
+        renderer: memoRenderer
       });
     } else {
-      layer = L.marker([lat, lng], { icon: buildShapeDivIcon(shape, color) });
+      layer = L.marker([lat, lng], {
+        icon: buildShapeDivIcon(shape, color),
+        pane: 'memoPane'
+      });
     }
   } else if (feature.geometry.type === 'LineString') {
     const latlngs = feature.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
@@ -40,7 +47,9 @@ function renderMemo(feature) {
     layer = L.polyline(latlngs, {
       color: p.line_color || CONFIG.style.fieldMemoLine.color,
       weight: p.line_width || CONFIG.style.fieldMemoLine.weight,
-      dashArray
+      dashArray,
+      pane: 'memoPane',
+      renderer: memoRenderer
     });
   } else {
     return;

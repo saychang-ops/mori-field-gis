@@ -25,6 +25,9 @@ export function initMap() {
   mapInstance.createPane('townBridgesPane');
   mapInstance.getPane('townBridgesPane').style.zIndex = 450;
 
+  mapInstance.createPane('memoPane');
+  mapInstance.getPane('memoPane').style.zIndex = 460;
+
   const initialBasemap = getBasemap();
   applyBasemap(initialBasemap);
 
