@@ -19,6 +19,9 @@ export function initMap() {
 
   L.control.zoom({ position: 'topleft' }).addTo(mapInstance);
 
+  mapInstance.createPane('townBridgesPane');
+  mapInstance.getPane('townBridgesPane').style.zIndex = 450;
+
   const initialBasemap = getBasemap();
   applyBasemap(initialBasemap);
 

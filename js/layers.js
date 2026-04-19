@@ -25,17 +25,24 @@ export async function loadTownBridges(map) {
   if (!res.ok) throw new Error('橋梁データ読込失敗');
   const data = await res.json();
 
+  const bridgesRenderer = L.svg({ pane: 'townBridgesPane' });
+
   const layer = L.geoJSON(data, {
     pointToLayer: (feature, latlng) =>
       L.circleMarker(latlng, {
         ...CONFIG.style.townBridge,
         fillColor: CONFIG.style.townBridge.color,
-        fillOpacity: 0.85
+        fillOpacity: 0.85,
+        pane: 'townBridgesPane',
+        renderer: bridgesRenderer
       }),
     onEachFeature: (feature, lyr) => {
       const p = feature.properties || {};
       lyr.bindPopup(renderBridgePopup(p));
-      lyr.on('click', () => highlightPointFeature(map, feature));
+      lyr.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        highlightPointFeature(map, feature);
+      });
     }
   }).addTo(map);
 
