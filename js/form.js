@@ -7,6 +7,7 @@ let pendingPhotos = [];
 let currentGeometry = null;
 let currentEditingId = null;
 let onSaveCallback = null;
+let currentStyleProps = {};
 
 export function openMemoForm({ geometry, editing = null, onSave }) {
   currentGeometry = geometry;
@@ -23,7 +24,72 @@ export function openMemoForm({ geometry, editing = null, onSave }) {
   pendingPhotos = editing ? [...(editing.properties.photos || [])] : [];
   renderThumbs();
 
+  const isLine = geometry && geometry.type === 'LineString';
+  renderStylePickers(isLine, editing ? editing.properties : null);
+
   overlay.classList.remove('hidden');
+}
+
+function renderStylePickers(isLine, existing) {
+  currentStyleProps = {};
+
+  if (isLine) {
+    document.getElementById('style-point-panel').classList.add('hidden');
+    document.getElementById('style-line-panel').classList.remove('hidden');
+    const style = existing?.line_style || 'solid';
+    const width = existing?.line_width ?? 4;
+    const color = existing?.line_color || CONFIG.iconPalette[0].value;
+    currentStyleProps.line_style = style;
+    currentStyleProps.line_width = width;
+    currentStyleProps.line_color = color;
+
+    renderPickerGroup('pick-line-style', CONFIG.lineStyles, style, (v) => {
+      currentStyleProps.line_style = v;
+    }, (v) => `<div class="line-preview ${v}"></div>`);
+
+    renderPickerGroup('pick-line-width', CONFIG.lineWidths, width, (v) => {
+      currentStyleProps.line_width = v;
+    }, (v) => `<div class="line-preview w${v}"></div>`);
+
+    renderPickerGroup('pick-line-color', CONFIG.iconPalette.map(c => c.value), color, (v) => {
+      currentStyleProps.line_color = v;
+    }, (v) => `<div class="color-dot" style="background:${v}"></div>`);
+  } else {
+    document.getElementById('style-point-panel').classList.remove('hidden');
+    document.getElementById('style-line-panel').classList.add('hidden');
+    const shape = existing?.icon_shape || 'circle';
+    const color = existing?.icon_color || CONFIG.iconPalette[0].value;
+    currentStyleProps.icon_type = 'simple';
+    currentStyleProps.icon_shape = shape;
+    currentStyleProps.icon_color = color;
+
+    renderPickerGroup('pick-shape', CONFIG.iconShapes, shape, (v) => {
+      currentStyleProps.icon_shape = v;
+    }, (v) => `<div class="shape-preview ${v}"></div>`);
+
+    renderPickerGroup('pick-icon-color', CONFIG.iconPalette.map(c => c.value), color, (v) => {
+      currentStyleProps.icon_color = v;
+    }, (v) => `<div class="color-dot" style="background:${v}"></div>`);
+  }
+}
+
+function renderPickerGroup(containerId, values, selectedValue, onPick, renderPreview) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.innerHTML = '';
+  values.forEach(v => {
+    const btn = document.createElement('div');
+    btn.className = 'style-option' + (String(v) === String(selectedValue) ? ' selected' : '');
+    btn.dataset.val = String(v);
+    btn.innerHTML = renderPreview(v);
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.style-option').forEach(o => o.classList.remove('selected'));
+      btn.classList.add('selected');
+      const parsedValue = typeof v === 'number' ? v : v;
+      onPick(parsedValue);
+    });
+    container.appendChild(btn);
+  });
 }
 
 export function closeMemoForm() {
@@ -135,12 +201,7 @@ function handleSave() {
     date: document.getElementById('f-date').value,
     person,
     photos: [...pendingPhotos],
-    icon_type: 'simple',
-    icon_shape: 'circle',
-    icon_color: CONFIG.style.fieldMemoPoint.color,
-    line_style: 'solid',
-    line_color: CONFIG.style.fieldMemoLine.color,
-    line_width: CONFIG.style.fieldMemoLine.weight
+    ...currentStyleProps
   };
   if (!currentEditingId) {
     props._created_at_iso = new Date().toISOString();

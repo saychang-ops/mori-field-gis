@@ -58,6 +58,22 @@
         <label>登録者
           <input type="text" id="f-person" maxlength="50">
         </label>
+        <div id="style-section">
+          <div id="style-point-panel">
+            <div class="style-label">アイコン形状</div>
+            <div class="style-options" id="pick-shape"></div>
+            <div class="style-label">色</div>
+            <div class="style-options" id="pick-icon-color"></div>
+          </div>
+          <div id="style-line-panel" class="hidden">
+            <div class="style-label">線種</div>
+            <div class="style-options" id="pick-line-style"></div>
+            <div class="style-label">太さ</div>
+            <div class="style-options" id="pick-line-width"></div>
+            <div class="style-label">色</div>
+            <div class="style-options" id="pick-line-color"></div>
+          </div>
+        </div>
         <div id="photo-section">
           <div class="photo-buttons">
             <label class="btn-like">
@@ -82,7 +98,7 @@
   <div id="toast-container"></div>
 
   <footer id="app-footer">
-    <span>森町建設課GIS (Field) <span id="version-label">v0.6.0</span></span>
+    <span>森町建設課GIS (Field) <span id="version-label">v0.7.0</span></span>
     <span id="memo-count">0件</span>
   </footer>
 

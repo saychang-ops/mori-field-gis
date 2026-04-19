@@ -19,18 +19,27 @@ function renderMemo(feature) {
   let layer;
   if (feature.geometry.type === 'Point') {
     const [lng, lat] = feature.geometry.coordinates;
-    layer = L.circleMarker([lat, lng], {
-      color: p.icon_color || CONFIG.style.fieldMemoPoint.color,
-      fillColor: p.icon_color || CONFIG.style.fieldMemoPoint.color,
-      fillOpacity: 0.85,
-      radius: CONFIG.style.fieldMemoPoint.radius,
-      weight: CONFIG.style.fieldMemoPoint.weight
-    });
+    const shape = p.icon_shape || 'circle';
+    const color = p.icon_color || CONFIG.style.fieldMemoPoint.color;
+    if (shape === 'circle') {
+      layer = L.circleMarker([lat, lng], {
+        color, fillColor: color, fillOpacity: 0.85,
+        radius: CONFIG.style.fieldMemoPoint.radius,
+        weight: CONFIG.style.fieldMemoPoint.weight
+      });
+    } else {
+      layer = L.marker([lat, lng], { icon: buildShapeDivIcon(shape, color) });
+    }
   } else if (feature.geometry.type === 'LineString') {
     const latlngs = feature.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+    const style = p.line_style || 'solid';
+    let dashArray = null;
+    if (style === 'dashed') dashArray = '12,8';
+    else if (style === 'dotted') dashArray = '4,6';
     layer = L.polyline(latlngs, {
       color: p.line_color || CONFIG.style.fieldMemoLine.color,
-      weight: p.line_width || CONFIG.style.fieldMemoLine.weight
+      weight: p.line_width || CONFIG.style.fieldMemoLine.weight,
+      dashArray
     });
   } else {
     return;
@@ -132,6 +141,25 @@ function rebuildMemoLayer() {
   loadMemos().forEach(renderMemo);
   updateMemoCount();
   getMap().closePopup();
+}
+
+function buildShapeDivIcon(shape, color) {
+  let html;
+  if (shape === 'square') {
+    html = `<div style="width:16px;height:16px;background:${color};border:2px solid #fff;"></div>`;
+  } else if (shape === 'triangle') {
+    html = `<div style="width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-bottom:18px solid ${color};filter:drop-shadow(0 0 1px #fff);"></div>`;
+  } else if (shape === 'star') {
+    html = `<div style="width:20px;height:20px;background:${color};clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);"></div>`;
+  } else {
+    html = `<div style="width:16px;height:16px;background:${color};border-radius:50%;border:2px solid #fff;"></div>`;
+  }
+  return L.divIcon({
+    className: 'memo-shape-marker',
+    html,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
 }
 
 window.__editMemo = editMemoById;

@@ -46,8 +46,8 @@ export const CONFIG = {
   style: {
     townRoad: { color: '#1976d2', weight: 3, opacity: 0.85 },
     townBridge: { color: '#616161', radius: 7, weight: 1 },
-    fieldMemoPoint: { color: '#e53935', radius: 8, weight: 2 },
-    fieldMemoLine: { color: '#e53935', weight: 4, dashArray: null },
+    fieldMemoPoint: { color: '#e63946', radius: 8, weight: 2 },
+    fieldMemoLine: { color: '#e63946', weight: 4, dashArray: null },
     currentLocation: { color: '#2962ff', radius: 8, fillOpacity: 0.9 },
     accuracyCircle: { color: '#2962ff', fillColor: '#2962ff', fillOpacity: 0.1, weight: 1 }
   },
@@ -56,5 +56,17 @@ export const CONFIG = {
     geocodeEndpoint: '/api/geocode'
   },
 
-  version: 'v0.6.0'
+  iconPalette: [
+    { name: '赤', value: '#e63946' },
+    { name: '青', value: '#457b9d' },
+    { name: '黄', value: '#f4a261' },
+    { name: '緑', value: '#2a9d8f' },
+    { name: 'オレンジ', value: '#ff8c00' },
+    { name: '紫', value: '#6a0dad' }
+  ],
+  iconShapes: ['circle', 'square', 'triangle', 'star'],
+  lineStyles: ['solid', 'dashed', 'dotted'],
+  lineWidths: [2, 4, 6],
+
+  version: 'v0.7.0'
 };
