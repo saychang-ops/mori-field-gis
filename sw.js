@@ -135,8 +135,11 @@ function scheduleTileTrim(cache) {
   if (trimPending) return;
   trimPending = true;
   setTimeout(async () => {
-    trimPending = false;
-    await trimTileCache(cache);
+    try {
+      await trimTileCache(cache);
+    } finally {
+      trimPending = false;
+    }
   }, 2000);
 }
 
