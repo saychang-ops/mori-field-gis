@@ -7,6 +7,8 @@ import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
 import { highlightLineFeature, highlightPointFeature, clearHighlight } from './highlight.js';
+import { shareOrDownload, estimateExportSize } from './export.js';
+import { loadMemos } from './storage.js';
 
 async function main() {
   const map = initMap();
@@ -29,6 +31,7 @@ async function main() {
   initFormHandlers();
 
   wireFab(map);
+  wireShareButton();
   setupSearchHandlers(map, roadFeatures, bridgeFeatures);
 
   if ('serviceWorker' in navigator) {
@@ -62,6 +65,28 @@ function wireFab(map) {
 
   document.getElementById('fab-add')?.addEventListener('click', () => {
     showAddMenu();
+  });
+}
+
+function wireShareButton() {
+  const shareBtn = document.getElementById('share-btn');
+  if (!shareBtn) return;
+  shareBtn.addEventListener('click', async () => {
+    const memos = loadMemos();
+    if (memos.length === 0) {
+      showToast('エクスポートするメモがありません', 'warning');
+      return;
+    }
+    const { mb } = estimateExportSize(memos);
+    if (!confirm(`現場メモ ${memos.length}件 / 約 ${mb.toFixed(2)} MB を共有しますか？`)) return;
+    try {
+      const r = await shareOrDownload();
+      if (r.method === 'share') showToast('共有しました', 'success');
+      else if (r.method === 'download') showToast('ダウンロードしました', 'success');
+      else if (r.method === 'failed') showToast('エクスポート失敗: ' + r.error, 'error');
+    } catch (e) {
+      showToast('エクスポート失敗: ' + e.message, 'error');
+    }
   });
 }
 
