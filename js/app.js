@@ -2,7 +2,7 @@ import { CONFIG } from './config.js';
 import { initMap, getMap, toggleBasemap } from './map.js';
 import { loadTownRoads, loadTownBridges, setTownLayersInteractive } from './layers.js';
 import { centerOnCurrentLocation, startWatching } from './gps.js';
-import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode } from './register.js';
+import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode, clearAllMemos } from './register.js';
 import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
@@ -32,6 +32,7 @@ async function main() {
 
   wireFab(map);
   wireShareButton();
+  wireClearAllButton();
   setupSearchHandlers(map, roadFeatures, bridgeFeatures);
 
   if ('serviceWorker' in navigator) {
@@ -65,6 +66,14 @@ function wireFab(map) {
 
   document.getElementById('fab-add')?.addEventListener('click', () => {
     showAddMenu();
+  });
+}
+
+function wireClearAllButton() {
+  const btn = document.getElementById('clear-all-btn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    clearAllMemos();
   });
 }
 

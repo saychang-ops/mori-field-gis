@@ -140,6 +140,25 @@ function rebuildMemoLayer() {
   getMap().closePopup();
 }
 
+export function clearAllMemos() {
+  const count = loadMemos().length;
+  if (count === 0) {
+    showToast('削除するメモがありません', 'warning');
+    return;
+  }
+  if (!confirm(`現場メモ ${count}件をすべて削除しますか？\n元に戻せません。`)) return;
+  if (!confirm('本当に削除しますか？')) return;
+  const result = saveMemos([]);
+  if (!result.ok) {
+    showToast('削除失敗: ' + result.message, 'error');
+    return;
+  }
+  memoLayerGroup.clearLayers();
+  updateMemoCount();
+  getMap().closePopup();
+  showToast(`${count}件のメモを削除しました`, 'success');
+}
+
 function buildShapeDivIcon(shape, color) {
   let html;
   if (shape === 'square') {
