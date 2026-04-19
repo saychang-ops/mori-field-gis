@@ -56,5 +56,5 @@ export const CONFIG = {
     geocodeEndpoint: '/api/geocode'
   },
 
-  version: 'v0.1.0'
+  version: 'v0.5.0'
 };

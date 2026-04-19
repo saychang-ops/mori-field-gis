@@ -1,14 +1,131 @@
-// Service Worker stub (v0.1.0). Real caching strategy is implemented in Phase 5.
-const VERSION = 'v0.1.0';
+const CACHE_VERSION = 'v0.5.0';
+const SHELL_CACHE = `shell-${CACHE_VERSION}`;
+const DATA_CACHE = `data-${CACHE_VERSION}`;
+const TILE_CACHE = 'tiles-v1';
+
+const SHELL_URLS = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/css/style.css',
+  '/js/config.js',
+  '/js/storage.js',
+  '/js/map.js',
+  '/js/layers.js',
+  '/js/gps.js',
+  '/js/search.js',
+  '/js/register.js',
+  '/js/form.js',
+  '/js/camera.js',
+  '/js/highlight.js',
+  '/js/toast.js',
+  '/js/app.js',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-maskable-512.png',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+  'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+];
+
+const DATA_URLS = [
+  '/data/town_roads.geojson',
+  '/data/town_bridges.geojson'
+];
+
+const TILE_CACHE_MAX_ENTRIES = 500;
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const shell = await caches.open(SHELL_CACHE);
+    await shell.addAll(SHELL_URLS);
+    const data = await caches.open(DATA_CACHE);
+    await data.addAll(DATA_URLS);
+    self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => {
+      if (k !== SHELL_CACHE && k !== DATA_CACHE && k !== TILE_CACHE) {
+        return caches.delete(k);
+      }
+    }));
+    await self.clients.claim();
+  })());
 });
 
 self.addEventListener('fetch', (event) => {
-  // Pass-through for Phase 1. Cache strategy comes later.
+  const req = event.request;
+  const url = new URL(req.url);
+
+  if (url.pathname.startsWith('/api/geocode')) {
+    event.respondWith(fetch(req).catch(() => new Response(
+      JSON.stringify({ status: 'OFFLINE', results: [] }),
+      { headers: { 'Content-Type': 'application/json' }, status: 200 }
+    )));
+    return;
+  }
+
+  if (isTileRequest(url)) {
+    event.respondWith(handleTile(req));
+    return;
+  }
+
+  if (isShellRequest(req) || DATA_URLS.includes(url.pathname)) {
+    event.respondWith(cacheFirst(req));
+    return;
+  }
 });
+
+function isTileRequest(url) {
+  return url.hostname === 'cyberjapandata.gsi.go.jp' ||
+         url.hostname === 'mt1.google.com';
+}
+
+function isShellRequest(req) {
+  return req.destination === 'style' ||
+         req.destination === 'script' ||
+         req.destination === 'document' ||
+         req.destination === 'image';
+}
+
+async function cacheFirst(req) {
+  const cached = await caches.match(req);
+  if (cached) return cached;
+  try {
+    const res = await fetch(req);
+    if (res.ok) {
+      const cache = await caches.open(SHELL_CACHE);
+      cache.put(req, res.clone());
+    }
+    return res;
+  } catch (e) {
+    return new Response('offline', { status: 503 });
+  }
+}
+
+async function handleTile(req) {
+  const cache = await caches.open(TILE_CACHE);
+  const cached = await cache.match(req);
+  if (cached) return cached;
+  try {
+    const res = await fetch(req);
+    if (res.ok) {
+      cache.put(req, res.clone()).then(() => trimTileCache(cache));
+    }
+    return res;
+  } catch (e) {
+    return new Response('', { status: 503 });
+  }
+}
+
+async function trimTileCache(cache) {
+  const keys = await cache.keys();
+  if (keys.length <= TILE_CACHE_MAX_ENTRIES) return;
+  const toDelete = keys.length - TILE_CACHE_MAX_ENTRIES;
+  for (let i = 0; i < toDelete; i++) {
+    await cache.delete(keys[i]);
+  }
+}
