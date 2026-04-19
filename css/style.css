@@ -179,3 +179,10 @@ body {
 #search-results .result-empty {
   padding: 16px; text-align: center; color: #888; font-size: 13px;
 }
+#search-results .result-header {
+  padding: 6px 10px; color: #555; font-size: 12px;
+  background: #fafafa; border-top: 1px solid #ddd;
+}
+#search-results .result-warn {
+  color: #c00; font-size: 11px; margin-top: 2px;
+}

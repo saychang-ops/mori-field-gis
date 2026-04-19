@@ -5,7 +5,7 @@ import { centerOnCurrentLocation, startWatching } from './gps.js';
 import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode } from './register.js';
 import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
-import { searchRoads, searchBridges, geocodeAddress } from './search.js';
+import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
 
 async function main() {
   const map = initMap();
@@ -127,25 +127,27 @@ function setupSearchHandlers(map, roadFeatures, bridgeFeatures) {
     results.classList.remove('hidden');
 
     if (type === 'address') {
+      results.innerHTML = '<div class="result-empty">検索中...</div>';
       try {
         const data = await geocodeAddress(q);
         if (data.status !== 'OK' || !data.results.length) {
           results.innerHTML = '<div class="result-empty">該当なし</div>';
           return;
         }
-        data.results.forEach(r => {
-          const item = document.createElement('div');
-          item.className = 'result-item';
-          item.textContent = r.formatted_address;
-          item.addEventListener('click', () => {
-            clearSearchMarkers(map);
-            map.setView([r.location.lat, r.location.lng], 17);
-            searchPinLayer = L.marker([r.location.lat, r.location.lng])
-              .addTo(map).bindPopup(r.formatted_address).openPopup();
-            results.classList.add('hidden');
-          });
-          results.appendChild(item);
-        });
+        results.innerHTML = '';
+        data.results.forEach(r => results.appendChild(buildAddressItem(map, r, results)));
+
+        if (data.results[0].isApprox) {
+          const loc = data.results[0].location;
+          const nearby = await reverseGeocodeNearby(loc.lat, loc.lng);
+          if (nearby.length) {
+            const header = document.createElement('div');
+            header.className = 'result-header';
+            header.textContent = '▼ 付近の住所候補';
+            results.appendChild(header);
+            nearby.forEach(r => results.appendChild(buildAddressItem(map, r, results)));
+          }
+        }
       } catch (e) {
         showToast('住所検索に失敗: ' + e.message, 'error');
         results.classList.add('hidden');
@@ -199,6 +201,30 @@ function setupSearchHandlers(map, roadFeatures, bridgeFeatures) {
 function clearSearchMarkers(map) {
   if (searchPinLayer) { map.removeLayer(searchPinLayer); searchPinLayer = null; }
   if (searchHighlightLayer) { map.removeLayer(searchHighlightLayer); searchHighlightLayer = null; }
+}
+
+function buildAddressItem(map, r, resultsEl) {
+  const item = document.createElement('div');
+  item.className = 'result-item';
+  if (r.isApprox) {
+    const main = document.createElement('div');
+    main.textContent = r.formatted_address;
+    const warn = document.createElement('div');
+    warn.className = 'result-warn';
+    warn.textContent = '※番地が特定できないため、おおよその位置です';
+    item.appendChild(main);
+    item.appendChild(warn);
+  } else {
+    item.textContent = r.formatted_address;
+  }
+  item.addEventListener('click', () => {
+    clearSearchMarkers(map);
+    map.setView([r.location.lat, r.location.lng], 17);
+    searchPinLayer = L.marker([r.location.lat, r.location.lng])
+      .addTo(map).bindPopup(r.formatted_address).openPopup();
+    resultsEl.classList.add('hidden');
+  });
+  return item;
 }
 
 document.addEventListener('DOMContentLoaded', main);
