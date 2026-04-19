@@ -2,21 +2,20 @@ import { CONFIG } from './config.js';
 import { initMap, getMap, toggleBasemap } from './map.js';
 import { loadTownRoads, loadTownBridges } from './layers.js';
 import { centerOnCurrentLocation, startWatching } from './gps.js';
-import { loadMemos } from './storage.js';
+import { initMemoLayer, addAtCurrentLocation, addNewPoint } from './register.js';
+import { initFormHandlers } from './form.js';
+import { showToast } from './toast.js';
 
 async function main() {
   const map = initMap();
 
-  updateMemoCount();
+  await Promise.all([
+    loadTownRoads(map).catch(e => console.warn(e)),
+    loadTownBridges(map).catch(e => console.warn(e))
+  ]);
 
-  try {
-    await Promise.all([
-      loadTownRoads(map).catch(e => console.warn(e)),
-      loadTownBridges(map).catch(e => console.warn(e))
-    ]);
-  } catch (e) {
-    console.warn('レイヤ読込エラー', e);
-  }
+  initMemoLayer(map);
+  initFormHandlers();
 
   wireFab(map);
 
@@ -34,41 +33,70 @@ async function main() {
 }
 
 function wireFab(map) {
-  const basemapBtn = document.getElementById('fab-basemap');
-  const gpsBtn = document.getElementById('fab-gps');
-  const addBtn = document.getElementById('fab-add');
+  document.getElementById('fab-basemap')?.addEventListener('click', () => {
+    toggleBasemap();
+  });
 
-  if (basemapBtn) {
-    basemapBtn.addEventListener('click', () => {
-      toggleBasemap();
-    });
-  }
-
-  if (gpsBtn) {
-    gpsBtn.addEventListener('click', async () => {
-      try {
-        const pt = await centerOnCurrentLocation(map);
-        if (pt.accuracy > CONFIG.gps.accuracyWarnThresholdM) {
-          console.info(`測位精度: 約${Math.round(pt.accuracy)}m`);
-        }
-      } catch (e) {
-        alert(e.message || '現在地取得失敗');
+  document.getElementById('fab-gps')?.addEventListener('click', async () => {
+    try {
+      const pt = await centerOnCurrentLocation(map);
+      if (pt.accuracy > CONFIG.gps.accuracyWarnThresholdM) {
+        showToast(`測位精度: 約${Math.round(pt.accuracy)}m`, 'warning');
       }
-    });
-  }
+    } catch (e) {
+      showToast(e.message || '現在地取得失敗', 'error');
+    }
+  });
 
-  if (addBtn) {
-    addBtn.addEventListener('click', () => {
-      alert('登録UIは v0.2.0 で実装予定です');
-    });
-  }
+  document.getElementById('fab-add')?.addEventListener('click', () => {
+    showAddMenu();
+  });
 }
 
-function updateMemoCount() {
-  const el = document.getElementById('memo-count');
-  if (!el) return;
-  const memos = loadMemos();
-  el.textContent = `${memos.length}件`;
+function showAddMenu() {
+  closeAddMenu();
+  const menu = document.createElement('div');
+  menu.id = 'add-menu';
+  const items = [
+    { action: 'current', label: '📍 現在地に点' },
+    { action: 'tap',     label: '👆 地図タップで点' },
+    { action: 'line',    label: '〰️ 線を描画' },
+    { action: 'cancel',  label: 'キャンセル' }
+  ];
+  items.forEach(({ action, label }) => {
+    const btn = document.createElement('button');
+    btn.dataset.action = action;
+    btn.textContent = label;
+    menu.appendChild(btn);
+  });
+  document.body.appendChild(menu);
+  menu.addEventListener('click', (e) => {
+    const action = e.target.dataset?.action;
+    if (!action) return;
+    closeAddMenu();
+    if (action === 'current') {
+      addAtCurrentLocation();
+    } else if (action === 'tap') {
+      enableTapToAddMode();
+    } else if (action === 'line') {
+      showToast('線描画モードは v0.3.0 で実装予定', 'warning');
+    }
+  });
+}
+
+function closeAddMenu() {
+  const existing = document.getElementById('add-menu');
+  if (existing) existing.remove();
+}
+
+function enableTapToAddMode() {
+  const map = getMap();
+  showToast('地図をタップして点を登録', 'success');
+  const handler = (e) => {
+    map.off('click', handler);
+    addNewPoint(e.latlng);
+  };
+  map.on('click', handler);
 }
 
 document.addEventListener('DOMContentLoaded', main);

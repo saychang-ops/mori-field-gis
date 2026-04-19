@@ -46,3 +46,101 @@ body {
   padding: 4px 12px; background: #f5f5f5; border-top: 1px solid #ddd;
   font-size: 12px; color: #555;
 }
+
+#bottom-sheet-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1500;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 1; transition: opacity 250ms ease-in-out;
+}
+#bottom-sheet-overlay.hidden {
+  opacity: 0; pointer-events: none;
+}
+#bottom-sheet {
+  position: relative;
+  width: 100%; max-width: 640px;
+  background: #fff; border-radius: 16px 16px 0 0;
+  padding: 20px 16px calc(16px + env(safe-area-inset-bottom));
+  max-height: 90vh; overflow-y: auto;
+  transform: translateY(0); transition: transform 250ms ease-in-out;
+}
+#bottom-sheet-overlay.hidden #bottom-sheet {
+  transform: translateY(100%);
+}
+#bottom-sheet-close {
+  position: absolute; right: 16px; top: 16px;
+  background: transparent; border: none; font-size: 24px; cursor: pointer;
+}
+#bottom-sheet h3 { margin: 0 0 16px; font-size: 18px; }
+#memo-form label {
+  display: block; margin-bottom: 12px; font-size: 14px; color: #555;
+}
+#memo-form input[type=text], #memo-form input[type=date],
+#memo-form textarea {
+  width: 100%; padding: 10px; font-size: 16px;
+  border: 1px solid #ccc; border-radius: 6px; margin-top: 4px;
+  font-family: inherit;
+}
+#memo-form textarea { resize: vertical; }
+
+.photo-buttons { display: flex; gap: 8px; margin-bottom: 8px; }
+.btn-like {
+  display: inline-block; padding: 10px 14px; background: #e3f2fd;
+  border: 1px solid #90caf9; border-radius: 6px; font-size: 14px;
+  cursor: pointer;
+}
+#photo-thumbnails {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.photo-thumb {
+  position: relative; width: 80px; height: 80px;
+  border-radius: 6px; overflow: hidden; border: 1px solid #ccc;
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-thumb .remove-btn {
+  position: absolute; top: 2px; right: 2px; width: 20px; height: 20px;
+  background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%;
+  font-size: 14px; cursor: pointer; line-height: 1;
+}
+
+.form-actions {
+  display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px;
+}
+.form-actions button {
+  padding: 10px 20px; font-size: 14px; border-radius: 6px; cursor: pointer;
+  border: 1px solid #ccc; background: #fff;
+}
+#form-save { background: #1976d2; color: #fff; border-color: #1976d2; }
+
+#add-menu {
+  position: fixed; left: 50%; bottom: 130px;
+  transform: translateX(-50%);
+  background: #fff; padding: 8px; border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex; flex-direction: column; gap: 4px; z-index: 1200;
+  min-width: 220px;
+}
+#add-menu button {
+  padding: 12px 16px; border: none; background: #f5f5f5;
+  border-radius: 6px; font-size: 14px; cursor: pointer; text-align: left;
+}
+#add-menu button:active { background: #e0e0e0; }
+
+#toast-container {
+  position: fixed; left: 50%; top: 72px;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex; flex-direction: column; gap: 6px;
+  pointer-events: none;
+}
+.toast {
+  padding: 10px 16px; border-radius: 6px; font-size: 14px;
+  color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  opacity: 0; transition: opacity 250ms ease-in-out;
+  max-width: 80vw;
+}
+.toast.visible { opacity: 1; }
+.toast.success { background: #2e7d32; }
+.toast.warning { background: #ef6c00; }
+.toast.error   { background: #c62828; }

@@ -32,8 +32,48 @@
     </div>
   </main>
 
+  <div id="bottom-sheet-overlay" class="hidden">
+    <div id="bottom-sheet">
+      <button id="bottom-sheet-close" aria-label="閉じる">×</button>
+      <h3 id="bottom-sheet-title">現場メモ</h3>
+      <form id="memo-form">
+        <label>タイトル
+          <input type="text" id="f-name" required maxlength="100">
+        </label>
+        <label>内容
+          <textarea id="f-remarks" rows="3" maxlength="500"></textarea>
+        </label>
+        <label>記録日
+          <input type="date" id="f-date">
+        </label>
+        <label>登録者
+          <input type="text" id="f-person" maxlength="50">
+        </label>
+        <div id="photo-section">
+          <div class="photo-buttons">
+            <label class="btn-like">
+              📷 撮影
+              <input type="file" id="f-photo-camera" accept="image/*" capture="environment" hidden>
+            </label>
+            <label class="btn-like">
+              🖼 選択
+              <input type="file" id="f-photo-gallery" accept="image/*" multiple hidden>
+            </label>
+          </div>
+          <div id="photo-thumbnails"></div>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="form-cancel">キャンセル</button>
+          <button type="submit" id="form-save">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
   <footer id="app-footer">
-    <span>森町建設課GIS (Field) <span id="version-label">v0.1.0</span></span>
+    <span>森町建設課GIS (Field) <span id="version-label">v0.2.0</span></span>
     <span id="memo-count">0件</span>
   </footer>
 

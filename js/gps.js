@@ -27,6 +27,24 @@ export function getCurrentPosition() {
   });
 }
 
+export function getCurrentPositionRaw() {
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)) {
+      reject(new Error('この端末は位置情報に対応していません'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve(pos),
+      err => reject(mapGeolocationError(err)),
+      {
+        enableHighAccuracy: CONFIG.gps.highAccuracy,
+        timeout: CONFIG.gps.timeoutMs,
+        maximumAge: 0
+      }
+    );
+  });
+}
+
 export function startWatching(map, onUpdate) {
   if (!('geolocation' in navigator)) {
     throw new Error('この端末は位置情報に対応していません');
