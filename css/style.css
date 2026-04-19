@@ -165,3 +165,17 @@ body {
 #line-confirm[disabled] {
   background: #bdbdbd !important; border-color: #bdbdbd !important; cursor: not-allowed;
 }
+
+#search-results {
+  background: #fff; border-bottom: 1px solid #ddd;
+  max-height: 200px; overflow-y: auto; z-index: 450;
+}
+#search-results.hidden { display: none; }
+#search-results .result-item {
+  padding: 8px 12px; border-bottom: 1px solid #eee; cursor: pointer;
+  font-size: 14px;
+}
+#search-results .result-item:active { background: #e3f2fd; }
+#search-results .result-empty {
+  padding: 16px; text-align: center; color: #888; font-size: 13px;
+}

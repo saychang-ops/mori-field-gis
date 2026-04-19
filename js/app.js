@@ -5,19 +5,30 @@ import { centerOnCurrentLocation, startWatching } from './gps.js';
 import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode } from './register.js';
 import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
+import { searchRoads, searchBridges, geocodeAddress } from './search.js';
 
 async function main() {
   const map = initMap();
 
-  await Promise.all([
-    loadTownRoads(map).catch(e => console.warn(e)),
-    loadTownBridges(map).catch(e => console.warn(e))
-  ]);
+  let roadFeatures = [];
+  let bridgeFeatures = [];
+  try {
+    const [roads, bridges] = await Promise.all([
+      loadTownRoads(map),
+      loadTownBridges(map)
+    ]);
+    roadFeatures = roads.features;
+    bridgeFeatures = bridges.features;
+  } catch (e) {
+    console.error('データ読込失敗:', e);
+    showToast('データ読込に失敗しました', 'error');
+  }
 
   initMemoLayer(map);
   initFormHandlers();
 
   wireFab(map);
+  setupSearchHandlers(map, roadFeatures, bridgeFeatures);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => {
@@ -97,6 +108,97 @@ function enableTapToAddMode() {
     addNewPoint(e.latlng);
   };
   map.on('click', handler);
+}
+
+let searchPinLayer = null;
+let searchHighlightLayer = null;
+
+function setupSearchHandlers(map, roadFeatures, bridgeFeatures) {
+  const btn = document.getElementById('search-btn');
+  const input = document.getElementById('search-input');
+  const typeSel = document.getElementById('search-type');
+  const results = document.getElementById('search-results');
+
+  async function doSearch() {
+    const q = input.value.trim();
+    if (!q) return;
+    const type = typeSel.value;
+    results.innerHTML = '';
+    results.classList.remove('hidden');
+
+    if (type === 'address') {
+      try {
+        const data = await geocodeAddress(q);
+        if (data.status !== 'OK' || !data.results.length) {
+          results.innerHTML = '<div class="result-empty">該当なし</div>';
+          return;
+        }
+        data.results.forEach(r => {
+          const item = document.createElement('div');
+          item.className = 'result-item';
+          item.textContent = r.formatted_address;
+          item.addEventListener('click', () => {
+            clearSearchMarkers(map);
+            map.setView([r.location.lat, r.location.lng], 17);
+            searchPinLayer = L.marker([r.location.lat, r.location.lng])
+              .addTo(map).bindPopup(r.formatted_address).openPopup();
+            results.classList.add('hidden');
+          });
+          results.appendChild(item);
+        });
+      } catch (e) {
+        showToast('住所検索に失敗: ' + e.message, 'error');
+        results.classList.add('hidden');
+      }
+    } else if (type === 'road') {
+      const matches = searchRoads(roadFeatures, q);
+      renderFeatureResults(matches, (f) => {
+        clearSearchMarkers(map);
+        searchHighlightLayer = L.geoJSON(f, {
+          style: { color: '#ff6f00', weight: 6, opacity: 0.9 }
+        }).addTo(map);
+        map.fitBounds(searchHighlightLayer.getBounds(), { maxZoom: 17 });
+      });
+    } else if (type === 'bridge') {
+      const matches = searchBridges(bridgeFeatures, q);
+      renderFeatureResults(matches, (f) => {
+        clearSearchMarkers(map);
+        const [lng, lat] = f.geometry.coordinates;
+        searchPinLayer = L.marker([lat, lng])
+          .addTo(map).bindPopup(f.properties.name || '').openPopup();
+        map.setView([lat, lng], 18);
+      });
+    }
+  }
+
+  function renderFeatureResults(features, onSelect) {
+    results.innerHTML = '';
+    if (features.length === 0) {
+      results.innerHTML = '<div class="result-empty">該当なし</div>';
+      return;
+    }
+    features.forEach(f => {
+      const p = f.properties || {};
+      const item = document.createElement('div');
+      item.className = 'result-item';
+      item.textContent = p.route_name ? `${p.route_code}: ${p.route_name}` : p.name;
+      item.addEventListener('click', () => {
+        onSelect(f);
+        results.classList.add('hidden');
+      });
+      results.appendChild(item);
+    });
+  }
+
+  btn.addEventListener('click', doSearch);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
+  });
+}
+
+function clearSearchMarkers(map) {
+  if (searchPinLayer) { map.removeLayer(searchPinLayer); searchPinLayer = null; }
+  if (searchHighlightLayer) { map.removeLayer(searchHighlightLayer); searchHighlightLayer = null; }
 }
 
 document.addEventListener('DOMContentLoaded', main);
