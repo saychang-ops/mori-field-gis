@@ -4,6 +4,7 @@ import { openMemoForm } from './form.js';
 import { loadMemos, saveMemos } from './storage.js';
 import { getCurrentPositionRaw } from './gps.js';
 import { showToast } from './toast.js';
+import { setTownLayersInteractive } from './layers.js';
 
 let memoLayerGroup = null;
 
@@ -177,6 +178,7 @@ export function startLineMode() {
     vertexMarkers: []
   };
   document.getElementById('line-mode-bar').classList.remove('hidden');
+  setTownLayersInteractive(map, false);
   map.on('click', onLineTap);
   if (!lineHandlersWired) {
     document.getElementById('line-undo').addEventListener('click', undoVertex);
@@ -267,6 +269,7 @@ function cleanupLineMode() {
   if (!lineMode) return;
   const map = getMap();
   map.off('click', onLineTap);
+  setTownLayersInteractive(map, true);
   lineMode.vertexMarkers.forEach(m => map.removeLayer(m));
   if (lineMode.previewLine) map.removeLayer(lineMode.previewLine);
   document.getElementById('line-mode-bar').classList.add('hidden');

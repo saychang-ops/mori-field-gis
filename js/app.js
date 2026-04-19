@@ -1,6 +1,6 @@
 import { CONFIG } from './config.js';
 import { initMap, getMap, toggleBasemap } from './map.js';
-import { loadTownRoads, loadTownBridges } from './layers.js';
+import { loadTownRoads, loadTownBridges, setTownLayersInteractive } from './layers.js';
 import { centerOnCurrentLocation, startWatching } from './gps.js';
 import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode } from './register.js';
 import { initFormHandlers } from './form.js';
@@ -129,8 +129,10 @@ function closeAddMenu() {
 function enableTapToAddMode() {
   const map = getMap();
   showToast('地図をタップして点を登録', 'success');
+  setTownLayersInteractive(map, false);
   const handler = (e) => {
     map.off('click', handler);
+    setTownLayersInteractive(map, true);
     addNewPoint(e.latlng);
   };
   map.on('click', handler);

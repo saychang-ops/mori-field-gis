@@ -6,7 +6,11 @@ export async function loadTownRoads(map) {
   if (!res.ok) throw new Error('町道データ読込失敗');
   const data = await res.json();
 
+  const roadsRenderer = L.canvas({ pane: 'townRoadsPane', tolerance: 15 });
+
   const layer = L.geoJSON(data, {
+    pane: 'townRoadsPane',
+    renderer: roadsRenderer,
     style: () => CONFIG.style.townRoad,
     onEachFeature: (feature, lyr) => {
       const p = feature.properties || {};
@@ -18,6 +22,13 @@ export async function loadTownRoads(map) {
   }).addTo(map);
 
   return { layer, features: data.features };
+}
+
+export function setTownLayersInteractive(map, enabled) {
+  ['townRoadsPane', 'townBridgesPane'].forEach(paneName => {
+    const pane = map.getPane(paneName);
+    if (pane) pane.style.pointerEvents = enabled ? '' : 'none';
+  });
 }
 
 export async function loadTownBridges(map) {
