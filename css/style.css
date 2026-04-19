@@ -152,7 +152,16 @@ body {
   font-size: 13px;
 }
 #line-mode-bar.hidden { display: none; }
+#line-mode-bar span { flex: 1; min-width: 0; }
 #line-mode-bar button {
   padding: 6px 12px; border: 1px solid #f57c00;
   background: #ffe0b2; border-radius: 4px; cursor: pointer; font-size: 12px;
+  white-space: nowrap;
+}
+#line-confirm {
+  background: #2e7d32 !important; color: #fff; border-color: #2e7d32 !important;
+  font-weight: bold;
+}
+#line-confirm[disabled] {
+  background: #bdbdbd !important; border-color: #bdbdbd !important; cursor: not-allowed;
 }

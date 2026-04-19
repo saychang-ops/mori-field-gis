@@ -152,10 +152,22 @@ export function startLineMode() {
   map.on('click', onLineTap);
   if (!lineHandlersWired) {
     document.getElementById('line-undo').addEventListener('click', undoVertex);
+    document.getElementById('line-confirm').addEventListener('click', confirmLine);
     document.getElementById('line-cancel').addEventListener('click', cancelLineMode);
     lineHandlersWired = true;
   }
+  updateLineBarState();
   showToast('地図をタップして頂点を追加', 'success');
+}
+
+function updateLineBarState() {
+  const confirmBtn = document.getElementById('line-confirm');
+  const undoBtn = document.getElementById('line-undo');
+  const label = document.getElementById('line-mode-label');
+  const count = lineMode ? lineMode.vertices.length : 0;
+  if (confirmBtn) confirmBtn.disabled = count < 2;
+  if (undoBtn) undoBtn.disabled = count === 0;
+  if (label) label.textContent = `線描画中（${count}点）`;
 }
 
 function onLineTap(e) {
@@ -167,10 +179,6 @@ function onLineTap(e) {
     color: '#e53935', fillColor: '#e53935', fillOpacity: 1,
     radius: 6, weight: 2
   }).addTo(map);
-
-  if (lineMode.vertices.length >= 2) {
-    attachLongPress(marker);
-  }
   lineMode.vertexMarkers.push(marker);
 
   if (lineMode.previewLine) map.removeLayer(lineMode.previewLine);
@@ -179,18 +187,7 @@ function onLineTap(e) {
       color: '#e53935', weight: 3, opacity: 0.7, dashArray: '6,6'
     }).addTo(map);
   }
-}
-
-function attachLongPress(marker) {
-  let timer = null;
-  const start = () => {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(() => { confirmLine(); }, CONFIG.longPress.durationMs);
-  };
-  const clear = () => { if (timer) { clearTimeout(timer); timer = null; } };
-  marker.on('mousedown', start);
-  marker.on('touchstart', start);
-  marker.on('mouseup mouseout touchend touchcancel', clear);
+  updateLineBarState();
 }
 
 function undoVertex() {
@@ -208,6 +205,7 @@ function undoVertex() {
       color: '#e53935', weight: 3, opacity: 0.7, dashArray: '6,6'
     }).addTo(map);
   }
+  updateLineBarState();
 }
 
 function confirmLine() {
