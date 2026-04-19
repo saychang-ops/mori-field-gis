@@ -24,20 +24,7 @@ function renderMemo(feature) {
     const [lng, lat] = feature.geometry.coordinates;
     const shape = p.icon_shape || 'circle';
     const color = p.icon_color || CONFIG.style.fieldMemoPoint.color;
-    if (shape === 'circle') {
-      layer = L.circleMarker([lat, lng], {
-        color, fillColor: color, fillOpacity: 0.85,
-        radius: CONFIG.style.fieldMemoPoint.radius,
-        weight: CONFIG.style.fieldMemoPoint.weight,
-        pane: 'memoPane',
-        renderer: memoRenderer
-      });
-    } else {
-      layer = L.marker([lat, lng], {
-        icon: buildShapeDivIcon(shape, color),
-        pane: 'memoPane'
-      });
-    }
+    layer = L.marker([lat, lng], { icon: buildShapeDivIcon(shape, color) });
   } else if (feature.geometry.type === 'LineString') {
     const latlngs = feature.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
     const style = p.line_style || 'solid';
