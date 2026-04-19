@@ -6,6 +6,7 @@ import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode } from 
 import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
+import { highlightLineFeature, highlightPointFeature, clearHighlight } from './highlight.js';
 
 async function main() {
   const map = initMap();
@@ -156,19 +157,17 @@ function setupSearchHandlers(map, roadFeatures, bridgeFeatures) {
       const matches = searchRoads(roadFeatures, q);
       renderFeatureResults(matches, (f) => {
         clearSearchMarkers(map);
-        searchHighlightLayer = L.geoJSON(f, {
-          style: { color: '#ff6f00', weight: 6, opacity: 0.9 }
-        }).addTo(map);
-        map.fitBounds(searchHighlightLayer.getBounds(), { maxZoom: 17 });
+        const bounds = L.geoJSON(f).getBounds();
+        map.fitBounds(bounds, { maxZoom: 17 });
+        highlightLineFeature(map, f);
       });
     } else if (type === 'bridge') {
       const matches = searchBridges(bridgeFeatures, q);
       renderFeatureResults(matches, (f) => {
         clearSearchMarkers(map);
         const [lng, lat] = f.geometry.coordinates;
-        searchPinLayer = L.marker([lat, lng])
-          .addTo(map).bindPopup(f.properties.name || '').openPopup();
         map.setView([lat, lng], 18);
+        highlightPointFeature(map, f);
       });
     }
   }
@@ -201,6 +200,7 @@ function setupSearchHandlers(map, roadFeatures, bridgeFeatures) {
 function clearSearchMarkers(map) {
   if (searchPinLayer) { map.removeLayer(searchPinLayer); searchPinLayer = null; }
   if (searchHighlightLayer) { map.removeLayer(searchHighlightLayer); searchHighlightLayer = null; }
+  clearHighlight(map);
 }
 
 function buildAddressItem(map, r, resultsEl) {

@@ -45,7 +45,7 @@ export const CONFIG = {
 
   style: {
     townRoad: { color: '#1976d2', weight: 3, opacity: 0.85 },
-    townBridge: { color: '#1e88e5', radius: 7, weight: 1 },
+    townBridge: { color: '#616161', radius: 7, weight: 1 },
     fieldMemoPoint: { color: '#e53935', radius: 8, weight: 2 },
     fieldMemoLine: { color: '#e53935', weight: 4, dashArray: null },
     currentLocation: { color: '#2962ff', radius: 8, fillOpacity: 0.9 },

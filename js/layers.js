@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { highlightLineFeature, highlightPointFeature } from './highlight.js';
 
 export async function loadTownRoads(map) {
   const res = await fetch('/data/town_roads.geojson');
@@ -12,6 +13,7 @@ export async function loadTownRoads(map) {
       const code = p.route_code || '—';
       const name = p.route_name || '未割当';
       lyr.bindPopup(`<b>町道</b><br>路線名: ${escapeHtml(name)}<br>コード: ${escapeHtml(code)}`);
+      lyr.on('click', () => highlightLineFeature(map, feature));
     }
   }).addTo(map);
 
@@ -33,6 +35,7 @@ export async function loadTownBridges(map) {
     onEachFeature: (feature, lyr) => {
       const p = feature.properties || {};
       lyr.bindPopup(renderBridgePopup(p));
+      lyr.on('click', () => highlightPointFeature(map, feature));
     }
   }).addTo(map);
 
