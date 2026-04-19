@@ -48,8 +48,8 @@ export const CONFIG = {
     townBridge: { color: '#616161', radius: 7, weight: 1 },
     fieldMemoPoint: { color: '#e63946', radius: 8, weight: 2 },
     fieldMemoLine: { color: '#e63946', weight: 4, dashArray: null },
-    currentLocation: { color: '#2962ff', radius: 8, fillOpacity: 0.9 },
-    accuracyCircle: { color: '#2962ff', fillColor: '#2962ff', fillOpacity: 0.1, weight: 1 }
+    currentLocation: { color: '#ff00ff', radius: 8, fillOpacity: 0.9 },
+    accuracyCircle: { color: '#ff00ff', fillColor: '#ff00ff', fillOpacity: 0.1, weight: 1 }
   },
 
   api: {

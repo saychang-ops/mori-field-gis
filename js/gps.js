@@ -82,8 +82,44 @@ export function centerOnCurrentLocation(map) {
   return getCurrentPosition().then(pt => {
     renderLocation(map, pt);
     map.setView([pt.lat, pt.lng], Math.max(map.getZoom(), 16));
+    pulseLocationMarker();
     return pt;
   });
+}
+
+let pulseTimer = null;
+
+function pulseLocationMarker() {
+  if (!locationMarker) return;
+  if (pulseTimer) {
+    clearInterval(pulseTimer);
+    pulseTimer = null;
+  }
+  const durationMs = 2500;
+  const start = Date.now();
+  let opacity = 1.0;
+  let fadeOut = true;
+  pulseTimer = setInterval(() => {
+    if (!locationMarker) {
+      clearInterval(pulseTimer);
+      pulseTimer = null;
+      return;
+    }
+    if (Date.now() - start >= durationMs) {
+      clearInterval(pulseTimer);
+      pulseTimer = null;
+      locationMarker.setStyle({ opacity: 1, fillOpacity: CONFIG.style.currentLocation.fillOpacity });
+      return;
+    }
+    if (fadeOut) {
+      opacity -= 0.05;
+      if (opacity <= 0.2) { opacity = 0.2; fadeOut = false; }
+    } else {
+      opacity += 0.05;
+      if (opacity >= 1.0) { opacity = 1.0; fadeOut = true; }
+    }
+    locationMarker.setStyle({ opacity, fillOpacity: opacity * 0.9 });
+  }, 30);
 }
 
 function renderLocation(map, pt) {

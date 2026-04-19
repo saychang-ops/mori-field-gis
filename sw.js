@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v0.7.3';
+const CACHE_VERSION = 'v0.7.4';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const DATA_CACHE = `data-${CACHE_VERSION}`;
 const TILE_CACHE = 'tiles-v1';
