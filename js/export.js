@@ -42,17 +42,22 @@ export async function shareOrDownload() {
     }
   }
 
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    URL.revokeObjectURL(url);
-    a.remove();
-  }, 1000);
-  return { method: 'download', count: memos.length };
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+      a.remove();
+    }, 10000);
+    return { method: 'download', count: memos.length };
+  } catch (e) {
+    console.error('download fallback failed:', e);
+    return { method: 'failed', count: memos.length, error: e.message };
+  }
 }
 
 function buildFilename() {
