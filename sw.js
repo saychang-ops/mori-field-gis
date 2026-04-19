@@ -34,12 +34,19 @@ const DATA_URLS = [
 
 const TILE_CACHE_MAX_ENTRIES = 500;
 
+async function addAllResilient(cache, urls) {
+  const results = await Promise.allSettled(urls.map(u => cache.add(u)));
+  results.forEach((r, i) => {
+    if (r.status === 'rejected') console.warn('SW install skip:', urls[i], r.reason);
+  });
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const shell = await caches.open(SHELL_CACHE);
-    await shell.addAll(SHELL_URLS);
+    await addAllResilient(shell, SHELL_URLS);
     const data = await caches.open(DATA_CACHE);
-    await data.addAll(DATA_URLS);
+    await addAllResilient(data, DATA_URLS);
     self.skipWaiting();
   })());
 });
@@ -97,7 +104,9 @@ async function cacheFirst(req) {
   try {
     const res = await fetch(req);
     if (res.ok) {
-      const cache = await caches.open(SHELL_CACHE);
+      const url = new URL(req.url);
+      const cacheName = DATA_URLS.includes(url.pathname) ? DATA_CACHE : SHELL_CACHE;
+      const cache = await caches.open(cacheName);
       cache.put(req, res.clone());
     }
     return res;
@@ -113,12 +122,22 @@ async function handleTile(req) {
   try {
     const res = await fetch(req);
     if (res.ok) {
-      cache.put(req, res.clone()).then(() => trimTileCache(cache));
+      cache.put(req, res.clone()).then(() => scheduleTileTrim(cache));
     }
     return res;
   } catch (e) {
     return new Response('', { status: 503 });
   }
+}
+
+let trimPending = false;
+function scheduleTileTrim(cache) {
+  if (trimPending) return;
+  trimPending = true;
+  setTimeout(async () => {
+    trimPending = false;
+    await trimTileCache(cache);
+  }, 2000);
 }
 
 async function trimTileCache(cache) {
