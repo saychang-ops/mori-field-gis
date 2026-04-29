@@ -7,12 +7,14 @@ let pendingPhotos = [];
 let currentGeometry = null;
 let currentEditingId = null;
 let onSaveCallback = null;
+let onCancelCallback = null;
 let currentStyleProps = {};
 
-export function openMemoForm({ geometry, editing = null, onSave }) {
+export function openMemoForm({ geometry, editing = null, onSave, onCancel = null }) {
   currentGeometry = geometry;
   currentEditingId = editing ? editing.properties._id : null;
   onSaveCallback = onSave;
+  onCancelCallback = onCancel;
 
   const overlay = document.getElementById('bottom-sheet-overlay');
 
@@ -94,10 +96,12 @@ function renderPickerGroup(containerId, values, selectedValue, onPick, renderPre
 
 export function closeMemoForm() {
   document.getElementById('bottom-sheet-overlay').classList.add('hidden');
+  if (onCancelCallback) onCancelCallback();
   pendingPhotos = [];
   currentGeometry = null;
   currentEditingId = null;
   onSaveCallback = null;
+  onCancelCallback = null;
 }
 
 function todayStr() {
@@ -210,5 +214,6 @@ function handleSave() {
   const feature = { type: 'Feature', geometry: currentGeometry, properties: props };
 
   if (onSaveCallback) onSaveCallback(feature);
+  onCancelCallback = null;
   closeMemoForm();
 }

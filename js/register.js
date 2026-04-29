@@ -10,7 +10,7 @@ let memoLayerGroup = null;
 let memoRenderer = null;
 
 export function initMemoLayer(map) {
-  memoRenderer = L.canvas({ pane: 'memoPane', tolerance: 15 });
+  memoRenderer = L.svg({ pane: 'memoPane' });
   memoLayerGroup = L.layerGroup().addTo(map);
   const memos = loadMemos();
   memos.forEach(renderMemo);
@@ -270,6 +270,9 @@ function confirmLine() {
       updateMemoCount();
       cleanupLineMode();
       showToast('線を保存しました', 'success');
+    },
+    onCancel: () => {
+      cleanupLineMode();
     }
   });
 }

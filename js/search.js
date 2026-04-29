@@ -2,6 +2,7 @@ export function normalize(s) {
   if (!s) return '';
   return String(s)
     .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/ヶ/g, 'ケ')
     .replace(/\s+/g, '')
     .toLowerCase();
 }

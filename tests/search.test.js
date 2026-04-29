@@ -11,6 +11,21 @@ describe('normalize', () => {
   it('小文字化', () => {
     expect(normalize('Main St')).toBe('mainst');
   });
+  it('小書きヶ→大書きケに統一', () => {
+    expect(normalize('駒ヶ岳')).toBe(normalize('駒ケ岳'));
+  });
+});
+
+describe('searchRoads ヶ/ケ正規化', () => {
+  const features = [
+    { properties: { route_code: '3001', route_name: '駒ケ岳線' } }
+  ];
+  it('小書きヶで駒ケ岳線が見つかる', () => {
+    expect(searchRoads(features, '駒ヶ岳').length).toBe(1);
+  });
+  it('大書きケでも見つかる', () => {
+    expect(searchRoads(features, '駒ケ岳').length).toBe(1);
+  });
 });
 
 describe('fuzzyMatch', () => {
