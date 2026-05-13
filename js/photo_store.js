@@ -98,6 +98,44 @@ export function revokeAllUrls() {
   blobUrlCache.clear();
 }
 
+export async function deletePhoto(refId) {
+  const db = await openDB();
+  const id = stripPrefix(refId);
+  const cached = blobUrlCache.get(refId);
+  if (cached) {
+    try { URL.revokeObjectURL(cached); } catch (_) {}
+    blobUrlCache.delete(refId);
+  }
+  await reqAsPromise(tx(db, 'readwrite').delete(id));
+}
+
+export async function deletePhotosByMemoId(memoId) {
+  const db = await openDB();
+  const all = await reqAsPromise(tx(db, 'readonly').getAllKeys());
+  const matching = all.filter((id) => id === memoId || id.startsWith(memoId + '_'));
+  for (const id of matching) {
+    const refId = REF_PREFIX + id;
+    const cached = blobUrlCache.get(refId);
+    if (cached) {
+      try { URL.revokeObjectURL(cached); } catch (_) {}
+      blobUrlCache.delete(refId);
+    }
+    await reqAsPromise(tx(db, 'readwrite').delete(id));
+  }
+}
+
+export async function listAllRefIds() {
+  const db = await openDB();
+  const all = await reqAsPromise(tx(db, 'readonly').getAllKeys());
+  return all.map((id) => REF_PREFIX + id);
+}
+
+export async function clearAll() {
+  const db = await openDB();
+  revokeAllUrls();
+  await reqAsPromise(tx(db, 'readwrite').clear());
+}
+
 export async function _resetForTests() {
   for (const url of blobUrlCache.values()) {
     try { URL.revokeObjectURL(url); } catch (_) {}

@@ -67,3 +67,46 @@ describe('photo_store: getPhotoUrl', () => {
     expect(url1).toBe(url2);
   });
 });
+
+describe('photo_store: delete / list / clearAll', () => {
+  beforeEach(async () => {
+    await _resetForTests();
+  });
+
+  it('deletePhoto で個別削除できる', async () => {
+    const { deletePhoto } = await import('../js/photo_store.js');
+    await openDB();
+    const refId = await putPhoto(makeBlob(20), 'M4', 0);
+    await deletePhoto(refId);
+    await expect(getPhoto(refId)).rejects.toThrow(/not found/);
+  });
+
+  it('deletePhotosByMemoId で同じmemoIdの写真をすべて削除', async () => {
+    const { deletePhotosByMemoId, listAllRefIds } = await import('../js/photo_store.js');
+    await openDB();
+    await putPhoto(makeBlob(10), 'M5', 0);
+    await putPhoto(makeBlob(10), 'M5', 1);
+    await putPhoto(makeBlob(10), 'M6', 0);
+    await deletePhotosByMemoId('M5');
+    const remaining = await listAllRefIds();
+    expect(remaining).toEqual(['idb:M6_0']);
+  });
+
+  it('listAllRefIds は idb: プレフィックス付きで全件返す', async () => {
+    const { listAllRefIds } = await import('../js/photo_store.js');
+    await openDB();
+    await putPhoto(makeBlob(10), 'M7', 0);
+    await putPhoto(makeBlob(10), 'M7', 1);
+    const list = await listAllRefIds();
+    expect(list.sort()).toEqual(['idb:M7_0', 'idb:M7_1']);
+  });
+
+  it('clearAll で全件消える', async () => {
+    const { clearAll, listAllRefIds } = await import('../js/photo_store.js');
+    await openDB();
+    await putPhoto(makeBlob(10), 'M8', 0);
+    await clearAll();
+    const list = await listAllRefIds();
+    expect(list).toEqual([]);
+  });
+});
