@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
-import { calcResizedDimensions } from '../js/camera.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { calcResizedDimensions, fileToResizedBlob } from '../js/camera.js';
 
 describe('calcResizedDimensions', () => {
   it('縦長画像を長辺1600にリサイズ（元3000x4000 → 1200x1600）', () => {
@@ -25,5 +25,42 @@ describe('calcResizedDimensions', () => {
     const r = calcResizedDimensions(2000, 2000, 1600);
     expect(r.width).toBe(1600);
     expect(r.height).toBe(1600);
+  });
+});
+
+describe('fileToResizedBlob', () => {
+  beforeEach(() => {
+    global.HTMLCanvasElement.prototype.getContext = function () {
+      return { drawImage: () => {} };
+    };
+    global.HTMLCanvasElement.prototype.toBlob = function (cb, type) {
+      cb(new Blob(['fake-jpeg-bytes'], { type: type || 'image/jpeg' }));
+    };
+    global.Image = class {
+      constructor() {
+        this.naturalWidth = 2000;
+        this.naturalHeight = 1500;
+        setTimeout(() => this.onload && this.onload(), 0);
+      }
+    };
+    global.FileReader = class {
+      readAsDataURL() {
+        setTimeout(() => {
+          this.result = 'data:image/jpeg;base64,AAAA';
+          this.onload && this.onload();
+        }, 0);
+      }
+    };
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('Blob を返す', async () => {
+    const file = new File(['x'], 'x.jpg', { type: 'image/jpeg' });
+    const blob = await fileToResizedBlob(file);
+    expect(blob).toBeInstanceOf(Blob);
+    expect(blob.type).toBe('image/jpeg');
   });
 });

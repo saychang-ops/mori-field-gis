@@ -12,7 +12,7 @@ export function calcResizedDimensions(origW, origH, maxLongEdge) {
   };
 }
 
-export async function fileToResizedDataUrl(file) {
+async function resizeToCanvas(file) {
   const img = await loadImage(file);
   const { width, height } = calcResizedDimensions(
     img.naturalWidth, img.naturalHeight,
@@ -23,7 +23,22 @@ export async function fileToResizedDataUrl(file) {
   canvas.height = height;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(img, 0, 0, width, height);
+  return canvas;
+}
+
+export async function fileToResizedDataUrl(file) {
+  const canvas = await resizeToCanvas(file);
   return canvas.toDataURL('image/jpeg', CONFIG.photo.jpegQuality);
+}
+
+export async function fileToResizedBlob(file) {
+  const canvas = await resizeToCanvas(file);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) reject(new Error('toBlob returned null'));
+      else resolve(blob);
+    }, 'image/jpeg', CONFIG.photo.jpegQuality);
+  });
 }
 
 function loadImage(file) {
