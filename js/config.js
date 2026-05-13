@@ -28,7 +28,7 @@ export const CONFIG = {
   },
 
   photo: {
-    maxCount: 3,
+    maxCount: 10,
     maxLongEdgePx: 1600,
     jpegQuality: 0.82
   },
@@ -68,5 +68,5 @@ export const CONFIG = {
   lineStyles: ['solid', 'dashed', 'dotted'],
   lineWidths: [2, 4, 6],
 
-  version: 'v1.1.2'
+  version: 'v1.2.0'
 };

@@ -71,6 +71,41 @@ describe('buildExportGeoJSON (async)', () => {
     expect(out.features[0].properties.photos[0]).toMatch(/^data:image\/jpeg;base64,/);
   });
 
+  it('layerName 指定時は _custom_layer_id が一意化され _custom_layer_name が上書きされる', async () => {
+    const memos = [
+      { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] },
+        properties: {
+          _id: 'M500', name: 'A',
+          _custom_layer_id: 'smartphone_field_memo',
+          _custom_layer_name: '現場メモ',
+          photos: []
+        } }
+    ];
+    const out = await buildExportGeoJSON(memos, '砂原調査');
+    expect(out._export_meta.layer_name).toBe('砂原調査');
+    expect(out.features[0].properties._custom_layer_name).toBe('砂原調査');
+    expect(out.features[0].properties._custom_layer_id).toMatch(/^smartphone_.*_\d{13}$/);
+    expect(out.features[0].properties._custom_layer_id).not.toBe('smartphone_field_memo');
+  });
+
+  it('layerName 未指定または空文字なら従来のデフォルト維持(後方互換)', async () => {
+    const memos = [
+      { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] },
+        properties: {
+          _id: 'M600', name: 'B',
+          _custom_layer_id: 'smartphone_field_memo',
+          _custom_layer_name: '現場メモ',
+          photos: []
+        } }
+    ];
+    const out1 = await buildExportGeoJSON(memos);
+    expect(out1.features[0].properties._custom_layer_id).toBe('smartphone_field_memo');
+    expect(out1._export_meta.layer_name).toBeNull();
+
+    const out2 = await buildExportGeoJSON(memos, '   ');
+    expect(out2.features[0].properties._custom_layer_id).toBe('smartphone_field_memo');
+  });
+
   it('既存 base64 はそのまま通す (混在)', async () => {
     const memos = [
       { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] },

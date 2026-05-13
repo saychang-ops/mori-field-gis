@@ -107,10 +107,19 @@ function wireShareButton() {
       showToast('エクスポートするメモがありません', 'warning');
       return;
     }
+    const today = new Date();
+    const defaultName = `現場メモ_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+    const layerName = window.prompt(
+      'PC版で取り込み時のレイヤ名（ファイル名にも使用）を入力してください\n' +
+      '空欄のままOKすると既定名で出力します',
+      defaultName
+    );
+    if (layerName === null) return; // ユーザーがキャンセル
+    const finalName = (layerName || '').trim();
     const { mb } = estimateExportSize(memos);
-    if (!confirm(`現場メモ ${memos.length}件 / 約 ${mb.toFixed(2)} MB を共有しますか？`)) return;
+    if (!confirm(`「${finalName || defaultName}」として\n現場メモ ${memos.length}件 / 約 ${mb.toFixed(2)} MB を共有しますか？`)) return;
     try {
-      const r = await shareOrDownload();
+      const r = await shareOrDownload(finalName || defaultName);
       if (r.method === 'share') showToast('共有しました', 'success');
       else if (r.method === 'download') showToast('ダウンロードしました', 'success');
       else if (r.method === 'failed') showToast('エクスポート失敗: ' + r.error, 'error');
