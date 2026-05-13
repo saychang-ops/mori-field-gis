@@ -1,9 +1,13 @@
 import { CONFIG } from './config.js';
-import { fileToResizedDataUrl } from './camera.js';
+import { fileToResizedBlob } from './camera.js';
 import { getAuthor, setAuthor } from './storage.js';
 import { showToast } from './toast.js';
+import { putPhoto, getPhotoUrl, deletePhoto } from './photo_store.js';
 
 let pendingPhotos = [];
+let pendingThumbUrls = [];
+let originalPhotosForEdit = [];
+let newlyAddedRefIds = [];
 let currentGeometry = null;
 let currentEditingId = null;
 let onSaveCallback = null;
@@ -24,6 +28,9 @@ export function openMemoForm({ geometry, editing = null, onSave, onCancel = null
   document.getElementById('f-person').value = editing ? editing.properties.person || '' : getAuthor() || '';
 
   pendingPhotos = editing ? [...(editing.properties.photos || [])] : [];
+  originalPhotosForEdit = [...pendingPhotos];
+  newlyAddedRefIds = [];
+  pendingThumbUrls = new Array(pendingPhotos.length).fill('');
   renderThumbs();
 
   const isLine = geometry && geometry.type === 'LineString';
@@ -87,8 +94,7 @@ function renderPickerGroup(containerId, values, selectedValue, onPick, renderPre
     btn.addEventListener('click', () => {
       container.querySelectorAll('.style-option').forEach(o => o.classList.remove('selected'));
       btn.classList.add('selected');
-      const parsedValue = typeof v === 'number' ? v : v;
-      onPick(parsedValue);
+      onPick(typeof v === 'number' ? v : v);
     });
     container.appendChild(btn);
   });
@@ -98,6 +104,9 @@ export function closeMemoForm() {
   document.getElementById('bottom-sheet-overlay').classList.add('hidden');
   if (onCancelCallback) onCancelCallback();
   pendingPhotos = [];
+  pendingThumbUrls = [];
+  originalPhotosForEdit = [];
+  newlyAddedRefIds = [];
   currentGeometry = null;
   currentEditingId = null;
   onSaveCallback = null;
@@ -114,11 +123,25 @@ function todayStr() {
 function renderThumbs() {
   const container = document.getElementById('photo-thumbnails');
   container.innerHTML = '';
-  pendingPhotos.forEach((dataUrl, idx) => {
+  pendingPhotos.forEach((ref, idx) => {
     const div = document.createElement('div');
     div.className = 'photo-thumb';
     const img = document.createElement('img');
-    img.src = dataUrl;
+    img.alt = '写真';
+    if (typeof ref === 'string' && ref.startsWith('data:')) {
+      img.src = ref;
+    } else if (typeof ref === 'string' && ref.startsWith('idb:')) {
+      if (pendingThumbUrls[idx]) {
+        img.src = pendingThumbUrls[idx];
+      } else {
+        getPhotoUrl(ref).then((url) => {
+          pendingThumbUrls[idx] = url;
+          img.src = url;
+        }).catch(() => {
+          img.alt = '写真読込失敗';
+        });
+      }
+    }
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'remove-btn';
@@ -129,9 +152,16 @@ function renderThumbs() {
     container.appendChild(div);
   });
   container.querySelectorAll('.remove-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       const i = parseInt(btn.dataset.idx, 10);
+      const removed = pendingPhotos[i];
       pendingPhotos.splice(i, 1);
+      pendingThumbUrls.splice(i, 1);
+      if (removed && typeof removed === 'string' && removed.startsWith('idb:')
+          && newlyAddedRefIds.includes(removed)) {
+        try { await deletePhoto(removed); } catch (_) {}
+        newlyAddedRefIds = newlyAddedRefIds.filter(r => r !== removed);
+      }
       renderThumbs();
     });
   });
@@ -143,14 +173,22 @@ async function handlePhotoFiles(files) {
     showToast(`写真は最大${CONFIG.photo.maxCount}枚までです`, 'warning');
     return;
   }
+  const tempMemoId = currentEditingId || ('M' + Date.now());
   const toProcess = Array.from(files).slice(0, remaining);
   for (const file of toProcess) {
     try {
-      const dataUrl = await fileToResizedDataUrl(file);
-      pendingPhotos.push(dataUrl);
+      const blob = await fileToResizedBlob(file);
+      const idx = pendingPhotos.length;
+      const refId = await putPhoto(blob, tempMemoId, idx);
+      pendingPhotos.push(refId);
+      pendingThumbUrls.push('');
+      newlyAddedRefIds.push(refId);
     } catch (e) {
       console.warn('写真処理失敗:', e);
-      showToast('写真の読込に失敗しました', 'error');
+      const msg = (e && e.name === 'QuotaExceededError')
+        ? '端末ストレージ容量が不足しています。古い写真を整理してください'
+        : '写真の読込に失敗しました';
+      showToast(msg, 'error');
     }
   }
   renderThumbs();
@@ -175,12 +213,19 @@ export function initFormHandlers() {
   });
 }
 
-function confirmClose() {
+async function confirmClose() {
   const hasInput =
     document.getElementById('f-name').value ||
     document.getElementById('f-remarks').value ||
     pendingPhotos.length > 0;
   if (hasInput && !currentEditingId && !confirm('入力内容を破棄しますか？')) return;
+
+  for (const refId of newlyAddedRefIds) {
+    if (!originalPhotosForEdit.includes(refId)) {
+      try { await deletePhoto(refId); } catch (_) {}
+    }
+  }
+
   closeMemoForm();
 }
 
@@ -209,6 +254,16 @@ function handleSave() {
   };
   if (!currentEditingId) {
     props._created_at_iso = new Date().toISOString();
+  }
+
+  if (currentEditingId) {
+    const stillReferenced = new Set(props.photos);
+    for (const oldRef of originalPhotosForEdit) {
+      if (oldRef && typeof oldRef === 'string' && oldRef.startsWith('idb:')
+          && !stillReferenced.has(oldRef)) {
+        deletePhoto(oldRef).catch(() => {});
+      }
+    }
   }
 
   const feature = { type: 'Feature', geometry: currentGeometry, properties: props };
