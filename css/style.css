@@ -228,3 +228,47 @@ body {
 
 #style-line-panel.hidden { display: none; }
 #style-point-panel.hidden { display: none; }
+
+/* v1.2.1: メモポップアップ写真を1列横スクロール */
+.memo-popup-photos {
+  display: flex; flex-wrap: nowrap;
+  overflow-x: auto; overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  gap: 4px; padding: 4px 0; max-width: 240px;
+}
+.memo-popup-photos img {
+  flex: 0 0 auto; width: 60px; height: 60px;
+  object-fit: cover; border-radius: 4px; cursor: pointer;
+  background: #eee; border: 1px solid #ddd;
+}
+
+/* v1.2.1: 写真クリック時のライトボックス */
+#lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(0,0,0,0.92);
+  display: flex; align-items: center; justify-content: center;
+}
+#lightbox.hidden { display: none; }
+#lightbox-img {
+  max-width: 95vw; max-height: 95vh; object-fit: contain;
+  user-select: none; -webkit-user-select: none;
+}
+#lightbox-close {
+  position: absolute; top: 12px; right: 12px;
+  background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #fff;
+  width: 44px; height: 44px; border-radius: 50%;
+  font-size: 24px; cursor: pointer; line-height: 1; padding: 0;
+}
+.lightbox-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  background: rgba(0,0,0,0.45); color: #fff; border: none;
+  width: 50px; height: 80px; font-size: 28px; cursor: pointer;
+  padding: 0; border-radius: 6px;
+}
+#lightbox-prev { left: 8px; }
+#lightbox-next { right: 8px; }
+#lightbox-counter {
+  position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+  color: #fff; font-size: 14px; background: rgba(0,0,0,0.5);
+  padding: 4px 12px; border-radius: 12px;
+}

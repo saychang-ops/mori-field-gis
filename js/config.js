@@ -68,5 +68,5 @@ export const CONFIG = {
   lineStyles: ['solid', 'dashed', 'dotted'],
   lineWidths: [2, 4, 6],
 
-  version: 'v1.2.0'
+  version: 'v1.2.1'
 };

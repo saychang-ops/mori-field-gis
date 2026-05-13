@@ -15,6 +15,7 @@ export function initMemoLayer(map) {
   const memos = loadMemos();
   memos.forEach(renderMemo);
   updateMemoCount();
+  initLightbox();
 
   map.on('popupopen', (e) => {
     const root = e.popup.getElement();
@@ -25,9 +26,7 @@ export function initMemoLayer(map) {
       if (!ref) return;
       if (ref.startsWith('data:')) {
         img.src = ref;
-        return;
-      }
-      if (ref.startsWith('idb:')) {
+      } else if (ref.startsWith('idb:')) {
         try {
           img.src = await getPhotoUrl(ref);
         } catch (_) {
@@ -35,8 +34,81 @@ export function initMemoLayer(map) {
           img.style.background = '#fee';
         }
       }
+      // v1.2.1: タップで拡大表示
+      img.addEventListener('click', () => {
+        const allImgs = Array.from(root.querySelectorAll('img[data-photo-ref]'));
+        const refs = allImgs.map(i => i.getAttribute('data-photo-ref'));
+        const idx = allImgs.indexOf(img);
+        openLightbox(refs, idx);
+      });
     });
   });
+}
+
+// v1.2.1: ライトボックス（タップ拡大表示）
+let lightboxPhotos = [];
+let lightboxIndex = 0;
+
+function initLightbox() {
+  const lb = document.getElementById('lightbox');
+  if (!lb || lb.dataset.wired === '1') return;
+  lb.dataset.wired = '1';
+  document.getElementById('lightbox-prev').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    if (lightboxIndex > 0) { lightboxIndex--; showLightboxImage(); updateLightboxNav(); }
+  });
+  document.getElementById('lightbox-next').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    if (lightboxIndex < lightboxPhotos.length - 1) { lightboxIndex++; showLightboxImage(); updateLightboxNav(); }
+  });
+  document.getElementById('lightbox-close').addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    closeLightbox();
+  });
+  lb.addEventListener('click', (ev) => {
+    if (ev.target.id === 'lightbox') closeLightbox();
+  });
+}
+
+function openLightbox(refs, startIdx) {
+  lightboxPhotos = (refs || []).slice();
+  lightboxIndex = Math.max(0, Math.min(startIdx || 0, lightboxPhotos.length - 1));
+  document.getElementById('lightbox').classList.remove('hidden');
+  showLightboxImage();
+  updateLightboxNav();
+}
+
+function showLightboxImage() {
+  const imgEl = document.getElementById('lightbox-img');
+  const ref = lightboxPhotos[lightboxIndex];
+  if (!ref) { imgEl.src = ''; return; }
+  if (typeof ref === 'string' && ref.startsWith('idb:')) {
+    imgEl.src = '';
+    const idxAtCall = lightboxIndex;
+    getPhotoUrl(ref).then(url => {
+      if (idxAtCall === lightboxIndex) imgEl.src = url;
+    }).catch(() => {
+      if (idxAtCall === lightboxIndex) imgEl.alt = '写真読込失敗';
+    });
+  } else {
+    imgEl.src = ref;
+  }
+  const counter = document.getElementById('lightbox-counter');
+  if (counter) counter.textContent = (lightboxIndex + 1) + ' / ' + lightboxPhotos.length;
+}
+
+function updateLightboxNav() {
+  document.getElementById('lightbox-prev').style.visibility = lightboxIndex > 0 ? 'visible' : 'hidden';
+  document.getElementById('lightbox-next').style.visibility = lightboxIndex < lightboxPhotos.length - 1 ? 'visible' : 'hidden';
+  const counter = document.getElementById('lightbox-counter');
+  if (counter) counter.style.visibility = lightboxPhotos.length > 1 ? 'visible' : 'hidden';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.add('hidden');
+  document.getElementById('lightbox-img').src = '';
+  lightboxPhotos = [];
+  lightboxIndex = 0;
 }
 
 function renderMemo(feature) {
@@ -71,7 +143,7 @@ function renderMemo(feature) {
 function buildPopupHtml(feature) {
   const p = feature.properties;
   const photos = (p.photos || [])
-    .map(src => `<img data-photo-ref="${escapeHtml(src)}" alt="写真" style="width:60px;height:60px;object-fit:cover;margin:2px;border-radius:4px;background:#eee;">`)
+    .map((src, idx) => `<img data-photo-ref="${escapeHtml(src)}" data-photo-idx="${idx}" alt="写真" />`)
     .join('');
   return `
     <div class="memo-popup" data-id="${p._id}">
@@ -79,7 +151,7 @@ function buildPopupHtml(feature) {
       <b>${escapeHtml(p.name || '')}</b><br>
       ${escapeHtml(p.remarks || '').replace(/\n/g, '<br>')}<br>
       <small>${escapeHtml(p.date || '')} ${escapeHtml(p.person || '')}</small><br>
-      <div>${photos}</div>
+      <div class="memo-popup-photos">${photos}</div>
       <div style="margin-top:8px;display:flex;gap:4px;">
         <button onclick="window.__editMemo('${p._id}')">編集</button>
         <button onclick="window.__deleteMemo('${p._id}')">削除</button>
