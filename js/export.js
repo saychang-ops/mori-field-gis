@@ -1,7 +1,41 @@
 import { CONFIG } from './config.js';
 import { loadMemos } from './storage.js';
+import { getPhoto } from './photo_store.js';
 
-export function buildExportGeoJSON(memos) {
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function resolvePhotos(photos) {
+  if (!Array.isArray(photos) || photos.length === 0) return [];
+  const out = [];
+  for (const p of photos) {
+    if (typeof p === 'string' && p.startsWith('idb:')) {
+      try {
+        const blob = await getPhoto(p);
+        out.push(await blobToDataUrl(blob));
+      } catch (e) {
+        console.warn('photo missing in IDB:', p, e);
+      }
+    } else {
+      out.push(p);
+    }
+  }
+  return out;
+}
+
+export async function buildExportGeoJSON(memos) {
+  const features = [];
+  for (const memo of memos) {
+    const props = { ...memo.properties };
+    props.photos = await resolvePhotos(props.photos);
+    features.push({ ...memo, properties: props });
+  }
   return {
     type: 'FeatureCollection',
     _export_meta: {
@@ -10,19 +44,23 @@ export function buildExportGeoJSON(memos) {
       exported_at: new Date().toISOString(),
       device: 'smartphone'
     },
-    features: memos
+    features
   };
 }
 
 export function estimateExportSize(memos) {
-  const json = JSON.stringify(buildExportGeoJSON(memos));
+  const json = JSON.stringify({
+    type: 'FeatureCollection',
+    features: memos,
+    _export_meta: { source: 'mori-field-gis', version: CONFIG.version }
+  });
   const bytes = new Blob([json]).size;
   return { bytes, mb: bytes / 1048576 };
 }
 
 export async function shareOrDownload() {
   const memos = loadMemos();
-  const geojson = buildExportGeoJSON(memos);
+  const geojson = await buildExportGeoJSON(memos);
   const jsonStr = JSON.stringify(geojson);
   const blob = new Blob([jsonStr], { type: 'application/geo+json' });
   const filename = buildFilename();

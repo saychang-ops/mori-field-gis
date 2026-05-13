@@ -1,7 +1,24 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { buildExportGeoJSON, estimateExportSize, shareOrDownload } from '../js/export.js';
+import { _resetForTests, openDB, putPhoto } from '../js/photo_store.js';
 
-describe('buildExportGeoJSON', () => {
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = () => 'blob:fake';
+  URL.revokeObjectURL = () => {};
+}
+
+function makeBlob(size = 32) {
+  const u8 = new Uint8Array(size);
+  for (let i = 0; i < size; i++) u8[i] = i % 256;
+  return new Blob([u8], { type: 'image/jpeg' });
+}
+
+describe('buildExportGeoJSON (async)', () => {
+  beforeEach(async () => {
+    await _resetForTests();
+    localStorage.clear();
+  });
+
   const sampleMemos = [
     {
       type: 'Feature',
@@ -17,29 +34,50 @@ describe('buildExportGeoJSON', () => {
     }
   ];
 
-  it('FeatureCollection形式で出力', () => {
-    const out = buildExportGeoJSON(sampleMemos);
+  it('FeatureCollection形式で出力', async () => {
+    const out = await buildExportGeoJSON(sampleMemos);
     expect(out.type).toBe('FeatureCollection');
     expect(out.features.length).toBe(1);
   });
 
-  it('_export_metaが付与される', () => {
-    const out = buildExportGeoJSON(sampleMemos);
+  it('_export_metaが付与される', async () => {
+    const out = await buildExportGeoJSON(sampleMemos);
     expect(out._export_meta.source).toBe('mori-field-gis');
     expect(out._export_meta.device).toBe('smartphone');
     expect(out._export_meta.exported_at).toBeTruthy();
     expect(out._export_meta.version).toBeTruthy();
   });
 
-  it('Featureの_type/_custom_layer_idが保持される', () => {
-    const out = buildExportGeoJSON(sampleMemos);
+  it('Featureの_type/_custom_layer_idが保持される', async () => {
+    const out = await buildExportGeoJSON(sampleMemos);
     expect(out.features[0].properties._type).toBe('custom');
     expect(out.features[0].properties._custom_layer_id).toBe('smartphone_field_memo');
   });
 
-  it('空配列でも正常出力', () => {
-    const out = buildExportGeoJSON([]);
+  it('空配列でも正常出力', async () => {
+    const out = await buildExportGeoJSON([]);
     expect(out.features).toEqual([]);
+  });
+
+  it('refId 入りの photos[] は base64 (data:) に復元される', async () => {
+    await openDB();
+    const refId = await putPhoto(makeBlob(64), 'M200', 0);
+    const memos = [
+      { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] },
+        properties: { _id: 'M200', photos: [refId] } }
+    ];
+    const out = await buildExportGeoJSON(memos);
+    expect(out.features[0].properties.photos.length).toBe(1);
+    expect(out.features[0].properties.photos[0]).toMatch(/^data:image\/jpeg;base64,/);
+  });
+
+  it('既存 base64 はそのまま通す (混在)', async () => {
+    const memos = [
+      { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] },
+        properties: { _id: 'M300', photos: ['data:image/jpeg;base64,AAAA'] } }
+    ];
+    const out = await buildExportGeoJSON(memos);
+    expect(out.features[0].properties.photos[0]).toBe('data:image/jpeg;base64,AAAA');
   });
 });
 
@@ -53,25 +91,17 @@ describe('estimateExportSize', () => {
 });
 
 describe('shareOrDownload', () => {
-  beforeEach(() => {
-    vi.stubGlobal('localStorage', {
-      getItem: vi.fn(() => JSON.stringify([])),
-      setItem: vi.fn()
-    });
+  beforeEach(async () => {
+    await _resetForTests();
+    localStorage.clear();
+    localStorage.setItem('mori_field_memos', JSON.stringify([]));
     vi.stubGlobal('URL', {
       createObjectURL: vi.fn(() => 'blob:fake-url'),
       revokeObjectURL: vi.fn()
     });
-    const fakeAnchor = {
-      href: '',
-      download: '',
-      click: vi.fn(),
-      remove: vi.fn()
-    };
-    vi.stubGlobal('document', {
-      createElement: vi.fn(() => fakeAnchor),
-      body: { appendChild: vi.fn() }
-    });
+    const fakeAnchor = { href: '', download: '', click: vi.fn(), remove: vi.fn() };
+    vi.spyOn(document, 'createElement').mockImplementation(() => fakeAnchor);
+    vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -79,12 +109,9 @@ describe('shareOrDownload', () => {
     vi.restoreAllMocks();
   });
 
-  it('uses Web Share API when available and canShare returns true', async () => {
+  it('uses Web Share API when available', async () => {
     const shareSpy = vi.fn().mockResolvedValue(undefined);
-    vi.stubGlobal('navigator', {
-      canShare: vi.fn(() => true),
-      share: shareSpy
-    });
+    vi.stubGlobal('navigator', { canShare: vi.fn(() => true), share: shareSpy });
     const result = await shareOrDownload();
     expect(shareSpy).toHaveBeenCalled();
     expect(result.method).toBe('share');
@@ -102,10 +129,9 @@ describe('shareOrDownload', () => {
   });
 
   it('falls back to download when share rejects with non-Abort error', async () => {
-    const err = new Error('share failed');
     vi.stubGlobal('navigator', {
       canShare: vi.fn(() => true),
-      share: vi.fn().mockRejectedValue(err)
+      share: vi.fn().mockRejectedValue(new Error('share failed'))
     });
     const result = await shareOrDownload();
     expect(result.method).toBe('download');
