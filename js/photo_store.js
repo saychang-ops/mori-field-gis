@@ -83,6 +83,21 @@ export async function getPhoto(refId) {
   return new Blob([record.data], { type: record.type || 'image/jpeg' });
 }
 
+export async function getPhotoUrl(refId) {
+  if (blobUrlCache.has(refId)) return blobUrlCache.get(refId);
+  const blob = await getPhoto(refId);
+  const url = URL.createObjectURL(blob);
+  blobUrlCache.set(refId, url);
+  return url;
+}
+
+export function revokeAllUrls() {
+  for (const url of blobUrlCache.values()) {
+    try { URL.revokeObjectURL(url); } catch (_) {}
+  }
+  blobUrlCache.clear();
+}
+
 export async function _resetForTests() {
   for (const url of blobUrlCache.values()) {
     try { URL.revokeObjectURL(url); } catch (_) {}

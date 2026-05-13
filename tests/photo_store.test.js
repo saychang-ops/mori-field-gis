@@ -43,3 +43,27 @@ describe('photo_store: openDB / putPhoto / getPhoto', () => {
     expect(blobSecond.size).toBe(20);
   });
 });
+
+describe('photo_store: getPhotoUrl', () => {
+  beforeEach(async () => {
+    await _resetForTests();
+  });
+
+  it('getPhotoUrl は blob: 形式のURLを返す', async () => {
+    const { getPhotoUrl } = await import('../js/photo_store.js');
+    await openDB();
+    const refId = await putPhoto(makeBlob(50), 'M2', 0);
+    const url = await getPhotoUrl(refId);
+    expect(typeof url).toBe('string');
+    expect(url.startsWith('blob:')).toBe(true);
+  });
+
+  it('同じ refId に対して getPhotoUrl を2回呼ぶと同じURLが返る (キャッシュ)', async () => {
+    const { getPhotoUrl } = await import('../js/photo_store.js');
+    await openDB();
+    const refId = await putPhoto(makeBlob(50), 'M3', 0);
+    const url1 = await getPhotoUrl(refId);
+    const url2 = await getPhotoUrl(refId);
+    expect(url1).toBe(url2);
+  });
+});
