@@ -2,7 +2,6 @@ import { CONFIG } from './config.js';
 import { getMap } from './map.js';
 import { openMemoForm } from './form.js';
 import { loadMemos, saveMemos } from './storage.js';
-import { getCurrentPositionRaw } from './gps.js';
 import { showToast } from './toast.js';
 import { setTownLayersInteractive } from './layers.js';
 import { getPhotoUrl, deletePhotosByMemoId, clearAll as clearAllPhotos } from './photo_store.js';
@@ -94,7 +93,7 @@ function escapeHtml(s) {
   }[ch]));
 }
 
-export function addNewPoint(latlng) {
+function openMemoFormForPoint(latlng) {
   openMemoForm({
     geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] },
     onSave: (feature) => {
@@ -112,17 +111,72 @@ export function addNewPoint(latlng) {
   });
 }
 
-export async function addAtCurrentLocation() {
-  try {
-    const pos = await getCurrentPositionRaw();
-    const { latitude, longitude, accuracy } = pos.coords;
-    if (accuracy > CONFIG.gps.accuracyWarnThresholdM) {
-      if (!confirm(`精度が低いです(±${accuracy.toFixed(0)}m)。このまま登録しますか？`)) return;
-    }
-    addNewPoint(L.latLng(latitude, longitude));
-  } catch (e) {
-    showToast('位置情報取得失敗: ' + (e.message || e), 'error');
+// v1.1.1: 線描画と同じ2段階フロー（タップで選択→確定で詳細登録）
+let pointMode = null;
+let pointHandlersWired = false;
+
+export function startPointMode() {
+  const map = getMap();
+  if (pointMode) return;
+  pointMode = { latlng: null, marker: null };
+  document.getElementById('point-mode-bar').classList.remove('hidden');
+  setTownLayersInteractive(map, false);
+  map.on('click', onPointTap);
+  if (!pointHandlersWired) {
+    document.getElementById('point-confirm').addEventListener('click', confirmPoint);
+    document.getElementById('point-cancel').addEventListener('click', cancelPointMode);
+    pointHandlersWired = true;
   }
+  updatePointBarState();
+  showToast('地図をタップして登録地点を選択', 'success');
+}
+
+function updatePointBarState() {
+  const confirmBtn = document.getElementById('point-confirm');
+  const label = document.getElementById('point-mode-label');
+  const hasPoint = !!(pointMode && pointMode.latlng);
+  if (confirmBtn) confirmBtn.disabled = !hasPoint;
+  if (label) label.textContent = hasPoint
+    ? '登録地点を確定してください（タップで再選択可）'
+    : '登録地点をタップして選択してください';
+}
+
+function onPointTap(e) {
+  if (!pointMode) return;
+  const map = getMap();
+  pointMode.latlng = e.latlng;
+  if (pointMode.marker) map.removeLayer(pointMode.marker);
+  pointMode.marker = L.circleMarker(e.latlng, {
+    color: '#e53935', fillColor: '#e53935', fillOpacity: 0.7,
+    radius: 10, weight: 3
+  }).addTo(map);
+  updatePointBarState();
+}
+
+function confirmPoint() {
+  if (!pointMode || !pointMode.latlng) {
+    showToast('地点が選択されていません', 'warning');
+    return;
+  }
+  const latlng = pointMode.latlng;
+  cleanupPointMode();
+  openMemoFormForPoint(latlng);
+}
+
+function cancelPointMode() {
+  if (!pointMode) return;
+  if (pointMode.latlng && !confirm('点登録をキャンセルしますか？')) return;
+  cleanupPointMode();
+}
+
+function cleanupPointMode() {
+  if (!pointMode) return;
+  const map = getMap();
+  map.off('click', onPointTap);
+  setTownLayersInteractive(map, true);
+  if (pointMode.marker) map.removeLayer(pointMode.marker);
+  document.getElementById('point-mode-bar').classList.add('hidden');
+  pointMode = null;
 }
 
 function updateMemoCount() {

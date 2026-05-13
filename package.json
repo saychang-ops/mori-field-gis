@@ -1,6 +1,6 @@
 {
   "name": "mori-field-gis",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "森町建設課GIS 現場データ収集アプリ",
   "private": true,
   "type": "module",

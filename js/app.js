@@ -1,8 +1,8 @@
 import { CONFIG } from './config.js';
-import { initMap, getMap, toggleBasemap } from './map.js';
-import { loadTownRoads, loadTownBridges, setTownLayersInteractive } from './layers.js';
+import { initMap, toggleBasemap } from './map.js';
+import { loadTownRoads, loadTownBridges } from './layers.js';
 import { centerOnCurrentLocation, startWatching } from './gps.js';
-import { initMemoLayer, addAtCurrentLocation, addNewPoint, startLineMode, clearAllMemos } from './register.js';
+import { initMemoLayer, startPointMode, startLineMode, clearAllMemos } from './register.js';
 import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
@@ -121,10 +121,9 @@ function showAddMenu() {
   const menu = document.createElement('div');
   menu.id = 'add-menu';
   const items = [
-    { action: 'current', label: '📍 現在地に点' },
-    { action: 'tap',     label: '👆 地図タップで点' },
-    { action: 'line',    label: '〰️ 線を描画' },
-    { action: 'cancel',  label: 'キャンセル' }
+    { action: 'point', label: '📍 点で登録' },
+    { action: 'line',  label: '〰️ 線で登録' },
+    { action: 'cancel', label: 'キャンセル' }
   ];
   items.forEach(({ action, label }) => {
     const btn = document.createElement('button');
@@ -137,10 +136,8 @@ function showAddMenu() {
     const action = e.target.dataset?.action;
     if (!action) return;
     closeAddMenu();
-    if (action === 'current') {
-      addAtCurrentLocation();
-    } else if (action === 'tap') {
-      enableTapToAddMode();
+    if (action === 'point') {
+      startPointMode();
     } else if (action === 'line') {
       startLineMode();
     }
@@ -150,18 +147,6 @@ function showAddMenu() {
 function closeAddMenu() {
   const existing = document.getElementById('add-menu');
   if (existing) existing.remove();
-}
-
-function enableTapToAddMode() {
-  const map = getMap();
-  showToast('地図をタップして点を登録', 'success');
-  setTownLayersInteractive(map, false);
-  const handler = (e) => {
-    map.off('click', handler);
-    setTownLayersInteractive(map, true);
-    addNewPoint(e.latlng);
-  };
-  map.on('click', handler);
 }
 
 let searchPinLayer = null;

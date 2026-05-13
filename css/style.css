@@ -146,24 +146,24 @@ body {
 .toast.warning { background: #ef6c00; }
 .toast.error   { background: #c62828; }
 
-#line-mode-bar {
+#line-mode-bar, #point-mode-bar {
   background: #fff3e0; padding: 8px 12px;
   display: flex; gap: 8px; align-items: center;
   border-bottom: 1px solid #ffb74d;
   font-size: 13px;
 }
-#line-mode-bar.hidden { display: none; }
-#line-mode-bar span { flex: 1; min-width: 0; }
-#line-mode-bar button {
+#line-mode-bar.hidden, #point-mode-bar.hidden { display: none; }
+#line-mode-bar span, #point-mode-bar span { flex: 1; min-width: 0; }
+#line-mode-bar button, #point-mode-bar button {
   padding: 6px 12px; border: 1px solid #f57c00;
   background: #ffe0b2; border-radius: 4px; cursor: pointer; font-size: 12px;
   white-space: nowrap;
 }
-#line-confirm {
+#line-confirm, #point-confirm {
   background: #2e7d32 !important; color: #fff; border-color: #2e7d32 !important;
   font-weight: bold;
 }
-#line-confirm[disabled] {
+#line-confirm[disabled], #point-confirm[disabled] {
   background: #bdbdbd !important; border-color: #bdbdbd !important; cursor: not-allowed;
 }
 
