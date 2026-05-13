@@ -5,6 +5,7 @@ import { loadMemos, saveMemos } from './storage.js';
 import { getCurrentPositionRaw } from './gps.js';
 import { showToast } from './toast.js';
 import { setTownLayersInteractive } from './layers.js';
+import { getPhotoUrl, deletePhotosByMemoId, clearAll as clearAllPhotos } from './photo_store.js';
 
 let memoLayerGroup = null;
 let memoRenderer = null;
@@ -15,6 +16,28 @@ export function initMemoLayer(map) {
   const memos = loadMemos();
   memos.forEach(renderMemo);
   updateMemoCount();
+
+  map.on('popupopen', (e) => {
+    const root = e.popup.getElement();
+    if (!root) return;
+    const imgs = root.querySelectorAll('img[data-photo-ref]');
+    imgs.forEach(async (img) => {
+      const ref = img.dataset.photoRef;
+      if (!ref) return;
+      if (ref.startsWith('data:')) {
+        img.src = ref;
+        return;
+      }
+      if (ref.startsWith('idb:')) {
+        try {
+          img.src = await getPhotoUrl(ref);
+        } catch (_) {
+          img.alt = '写真読込失敗';
+          img.style.background = '#fee';
+        }
+      }
+    });
+  });
 }
 
 function renderMemo(feature) {
@@ -49,7 +72,7 @@ function renderMemo(feature) {
 function buildPopupHtml(feature) {
   const p = feature.properties;
   const photos = (p.photos || [])
-    .map(src => `<img src="${src}" style="width:60px;height:60px;object-fit:cover;margin:2px;border-radius:4px;">`)
+    .map(src => `<img data-photo-ref="${escapeHtml(src)}" alt="写真" style="width:60px;height:60px;object-fit:cover;margin:2px;border-radius:4px;background:#eee;">`)
     .join('');
   return `
     <div class="memo-popup" data-id="${p._id}">
@@ -129,6 +152,7 @@ export function deleteMemoById(id) {
   if (!confirm('このメモを削除しますか？')) return;
   const memos = loadMemos().filter(m => m.properties._id !== id);
   saveMemos(memos);
+  deletePhotosByMemoId(id).catch((e) => console.warn('photo cleanup failed', e));
   rebuildMemoLayer();
   showToast('削除しました', 'success');
 }
@@ -153,6 +177,7 @@ export function clearAllMemos() {
     showToast('削除失敗: ' + result.message, 'error');
     return;
   }
+  clearAllPhotos().catch((e) => console.warn('photo clearAll failed', e));
   memoLayerGroup.clearLayers();
   updateMemoCount();
   getMap().closePopup();
