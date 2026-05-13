@@ -20,6 +20,10 @@ async function main() {
     showToast('写真データの移行に一部失敗しました', 'warning');
   }
 
+  // footer のバージョン表示を CONFIG から動的反映（ハードコード忘れ防止）
+  const versionEl = document.getElementById('version-label');
+  if (versionEl) versionEl.textContent = CONFIG.version;
+
   const map = initMap();
 
   let roadFeatures = [];
