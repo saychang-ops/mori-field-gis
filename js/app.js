@@ -9,8 +9,17 @@ import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from
 import { highlightLineFeature, highlightPointFeature, clearHighlight } from './highlight.js';
 import { shareOrDownload, estimateExportSize } from './export.js';
 import { loadMemos } from './storage.js';
+import { migratePhotosToIndexedDB } from './migration.js';
+import { cleanupOrphans } from './orphan_gc.js';
 
 async function main() {
+  try {
+    await migratePhotosToIndexedDB();
+  } catch (e) {
+    console.warn('photo migration failed:', e);
+    showToast('写真データの移行に一部失敗しました', 'warning');
+  }
+
   const map = initMap();
 
   let roadFeatures = [];
@@ -46,6 +55,14 @@ async function main() {
   } catch (e) {
     console.warn('GPS watch unavailable', e);
   }
+
+  const scheduleIdle = (cb) => {
+    if (typeof requestIdleCallback === 'function') requestIdleCallback(cb, { timeout: 5000 });
+    else setTimeout(cb, 2000);
+  };
+  scheduleIdle(() => {
+    cleanupOrphans().catch((e) => console.warn('orphan GC failed:', e));
+  });
 }
 
 function wireFab(map) {
