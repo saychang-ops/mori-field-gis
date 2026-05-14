@@ -88,20 +88,39 @@ export async function shareOrDownload(layerName) {
   const filename = buildFilename(layerName);
   const file = new File([blob], filename, { type: 'application/json' });
 
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
-    try {
-      await navigator.share({
-        files: [file],
-        title: '現場メモ',
-        text: `現場メモ ${memos.length}件`
-      });
-      return { method: 'share', count: memos.length };
-    } catch (e) {
-      if (e.name === 'AbortError') return { method: 'abort' };
-      console.warn('share failed, falling back to download:', e);
-    }
+  // 診断: Web Share API のサポート状況を可視化
+  const hasShare = typeof navigator.share === 'function';
+  const hasCanShare = typeof navigator.canShare === 'function';
+  const canShareFiles = hasCanShare ? navigator.canShare({ files: [file] }) : false;
+  console.log('[Share Diag]', {
+    hasShare, hasCanShare, canShareFiles,
+    fileName: file.name, fileType: file.type, fileSize: file.size,
+    userAgent: navigator.userAgent
+  });
+
+  if (!hasShare) {
+    return { method: 'download', count: memos.length, diag: 'no-share-api', _doDownload: true, _blob: blob, _filename: filename };
+  }
+  if (!canShareFiles) {
+    return { method: 'download', count: memos.length, diag: 'canShare-false', _doDownload: true, _blob: blob, _filename: filename };
   }
 
+  try {
+    await navigator.share({
+      files: [file],
+      title: '現場メモ',
+      text: `現場メモ ${memos.length}件`
+    });
+    return { method: 'share', count: memos.length };
+  } catch (e) {
+    if (e.name === 'AbortError') return { method: 'abort' };
+    console.warn('share failed, falling back to download:', e);
+    return { method: 'download', count: memos.length, diag: 'share-threw:' + e.name + ':' + (e.message || ''), _doDownload: true, _blob: blob, _filename: filename };
+  }
+}
+
+// shareOrDownload が返した _doDownload フラグに従って blob ダウンロードを発火
+export function performBlobDownload(blob, filename) {
   try {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -113,10 +132,10 @@ export async function shareOrDownload(layerName) {
       URL.revokeObjectURL(url);
       a.remove();
     }, 10000);
-    return { method: 'download', count: memos.length };
+    return true;
   } catch (e) {
-    console.error('download fallback failed:', e);
-    return { method: 'failed', count: memos.length, error: e.message };
+    console.error('blob download failed:', e);
+    return false;
   }
 }
 

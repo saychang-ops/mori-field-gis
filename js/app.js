@@ -7,7 +7,7 @@ import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
 import { highlightLineFeature, highlightPointFeature, clearHighlight } from './highlight.js';
-import { shareOrDownload, estimateExportSize } from './export.js';
+import { shareOrDownload, estimateExportSize, performBlobDownload } from './export.js';
 import { loadMemos } from './storage.js';
 import { migratePhotosToIndexedDB } from './migration.js';
 import { cleanupOrphans } from './orphan_gc.js';
@@ -120,9 +120,25 @@ function wireShareButton() {
     if (!confirm(`「${finalName || defaultName}」として\n現場メモ ${memos.length}件 / 約 ${mb.toFixed(2)} MB を共有しますか？`)) return;
     try {
       const r = await shareOrDownload(finalName || defaultName);
-      if (r.method === 'share') showToast('共有しました', 'success');
-      else if (r.method === 'download') showToast('ダウンロードしました', 'success');
-      else if (r.method === 'failed') showToast('エクスポート失敗: ' + r.error, 'error');
+      if (r.method === 'share') {
+        showToast('共有しました', 'success');
+      } else if (r.method === 'abort') {
+        showToast('共有をキャンセルしました', 'warning');
+      } else if (r.method === 'download') {
+        // 共有シートが出なかった理由を表示してから blob download にフォールバック
+        if (r.diag) {
+          showToast('共有不可: ' + r.diag + ' → ダウンロードに切替', 'warning');
+          // 5秒待ってからdownload発火 (トースト確認時間)
+          await new Promise(res => setTimeout(res, 1500));
+        }
+        if (r._doDownload && r._blob && r._filename) {
+          const ok = performBlobDownload(r._blob, r._filename);
+          if (ok) showToast('ダウンロードしました: ' + r._filename, 'success');
+          else showToast('ダウンロードにも失敗', 'error');
+        }
+      } else if (r.method === 'failed') {
+        showToast('エクスポート失敗: ' + r.error, 'error');
+      }
     } catch (e) {
       showToast('エクスポート失敗: ' + e.message, 'error');
     }
