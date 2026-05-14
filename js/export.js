@@ -121,9 +121,12 @@ export async function shareOrDownload(layerName) {
 }
 
 function buildFilename(layerName) {
-  const safe = sanitizeFilename(layerName);
+  // 拡張子は .json に固定 (Chrome の Web Share API が .geojson 拡張子を
+  // 許可リスト外と判定し、共有シートを出さずにblob downloadに落ちるため)。
+  // PC版v1.6.0以降は .json も .geojson も両方取込対応。
+  const safe = sanitizeFilename(layerName).replace(/\.(geo)?json$/i, '');
   if (safe) {
-    return safe.endsWith('.geojson') ? safe : `${safe}.geojson`;
+    return `${safe}.json`;
   }
   // 名前未指定なら従来のタイムスタンプ形式
   const d = new Date();
@@ -132,5 +135,5 @@ function buildFilename(layerName) {
   const day = String(d.getDate()).padStart(2, '0');
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
-  return `field_memos_${y}${m}${day}_${hh}${mm}.geojson`;
+  return `field_memos_${y}${m}${day}_${hh}${mm}.json`;
 }
