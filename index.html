@@ -105,6 +105,21 @@
 
   <div id="toast-container"></div>
 
+  <div id="share-modal-overlay" class="hidden" aria-hidden="true">
+    <div id="share-modal" role="dialog" aria-labelledby="share-modal-title">
+      <h3 id="share-modal-title">現場メモを共有</h3>
+      <label>レイヤ名(ファイル名にも使用)
+        <input type="text" id="share-modal-name" maxlength="80" />
+      </label>
+      <p id="share-modal-summary"></p>
+      <p id="share-modal-hint">送信を押すと共有メニューが開きます。同名ファイルは上書きされる場合があります。</p>
+      <div class="share-modal-actions">
+        <button type="button" id="share-modal-cancel">キャンセル</button>
+        <button type="button" id="share-modal-send">送信</button>
+      </div>
+    </div>
+  </div>
+
   <div id="lightbox" class="hidden" aria-hidden="true">
     <button id="lightbox-prev" class="lightbox-nav" aria-label="前へ">◀</button>
     <img id="lightbox-img" alt="拡大写真" />
@@ -114,7 +129,7 @@
   </div>
 
   <footer id="app-footer">
-    <span>森町建設課GIS (Field) <span id="version-label">v1.3.4-diag</span></span>
+    <span>森町建設課GIS (Field) <span id="version-label">v1.3.5</span></span>
     <span id="memo-count">0件</span>
   </footer>
 

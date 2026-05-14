@@ -29,9 +29,55 @@ async function resolvePhotos(photos) {
   return out;
 }
 
-// v1.2.0: 任意でレイヤ名を指定可能。指定された場合は各featureの _custom_layer_id を一意化し、
-// _custom_layer_name を指定名に上書き → PC版で新規レイヤとして取り込まれる。
-// 指定なしの場合は従来通り 'smartphone_field_memo' (後方互換)
+// v1.3.5: ユーザー操作 (送信ボタンクリック) の gesture を保ったまま
+// navigator.share() を呼び出すため、写真解決を「事前」に行い、レイヤ名適用は
+// 「同期」関数として分離。これにより送信クリック→share() の間に async/await を
+// 挟まずに済むので、Chrome の transient activation が期限切れにならない。
+
+// 写真IDB→dataURL解決のみ済ませた中間feature配列を生成 (async、時間がかかる)
+export async function buildResolvedBaseFeatures(memos) {
+  const features = [];
+  for (const memo of memos) {
+    const props = { ...memo.properties };
+    props.photos = await resolvePhotos(props.photos);
+    features.push({ ...memo, properties: props });
+  }
+  return features;
+}
+
+// レイヤ名を適用して最終的なGeoJSON FeatureCollectionを返す (同期)
+export function applyLayerNameAndBuild(baseFeatures, layerName) {
+  const trimmedName = (layerName || '').trim();
+  let layerId = null;
+  let layerLabel = null;
+  if (trimmedName) {
+    const slug = trimmedName.replace(/[^\w぀-ヿ一-鿿-]/g, '_').slice(0, 40);
+    layerId = `smartphone_${slug}_${Date.now()}`;
+    layerLabel = trimmedName;
+  }
+  const features = baseFeatures.map(f => {
+    const props = { ...f.properties };
+    if (layerId) {
+      props._custom_layer_id = layerId;
+      props._custom_layer_name = layerLabel;
+    }
+    return { ...f, properties: props };
+  });
+  return {
+    type: 'FeatureCollection',
+    _export_meta: {
+      source: 'mori-field-gis',
+      version: CONFIG.version,
+      exported_at: new Date().toISOString(),
+      device: 'smartphone',
+      layer_name: layerLabel || null
+    },
+    features
+  };
+}
+
+// 後方互換用: 旧API (memos -> resolve -> apply の一気通貫)。新コードからは
+// buildResolvedBaseFeatures + applyLayerNameAndBuild の組合せ推奨。
 export async function buildExportGeoJSON(memos, layerName) {
   const trimmedName = (layerName || '').trim();
   let layerId = null;

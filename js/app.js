@@ -7,7 +7,7 @@ import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
 import { highlightLineFeature, highlightPointFeature, clearHighlight } from './highlight.js';
-import { shareOrDownload, estimateExportSize, performBlobDownload } from './export.js';
+import { estimateExportSize, performBlobDownload, buildResolvedBaseFeatures, applyLayerNameAndBuild, sanitizeFilename } from './export.js';
 import { loadMemos } from './storage.js';
 import { migratePhotosToIndexedDB } from './migration.js';
 import { cleanupOrphans } from './orphan_gc.js';
@@ -98,6 +98,50 @@ function wireClearAllButton() {
   });
 }
 
+function buildFilenameForName(name) {
+  // export.js の buildFilename と同等ロジックだが、app.js 側で同期に必要
+  const safe = sanitizeFilename(name).replace(/\.(geo)?json$/i, '');
+  if (safe) return `${safe}.json`;
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `field_memos_${y}${m}${day}_${hh}${mm}.json`;
+}
+
+function openShareModal({ defaultName, summaryText, onSend }) {
+  const overlay = document.getElementById('share-modal-overlay');
+  const nameInput = document.getElementById('share-modal-name');
+  const summaryEl = document.getElementById('share-modal-summary');
+  const cancelBtn = document.getElementById('share-modal-cancel');
+  const sendBtn = document.getElementById('share-modal-send');
+  if (!overlay || !nameInput || !summaryEl || !cancelBtn || !sendBtn) {
+    return;
+  }
+  nameInput.value = defaultName;
+  summaryEl.textContent = summaryText;
+  overlay.classList.remove('hidden');
+  overlay.setAttribute('aria-hidden', 'false');
+
+  const close = () => {
+    overlay.classList.add('hidden');
+    overlay.setAttribute('aria-hidden', 'true');
+    cancelBtn.removeEventListener('click', onCancel);
+    sendBtn.removeEventListener('click', onClick);
+  };
+  const onCancel = () => close();
+  const onClick = () => {
+    const name = (nameInput.value || '').trim() || defaultName;
+    close();
+    onSend(name);
+  };
+  cancelBtn.addEventListener('click', onCancel);
+  sendBtn.addEventListener('click', onClick);
+  setTimeout(() => nameInput.focus(), 50);
+}
+
 function wireShareButton() {
   const shareBtn = document.getElementById('share-btn');
   if (!shareBtn) return;
@@ -107,41 +151,69 @@ function wireShareButton() {
       showToast('エクスポートするメモがありません', 'warning');
       return;
     }
+
+    // 写真IDB→dataURL解決を事前に済ませる (送信クリック後のasync待ちをゼロにするため)
+    let baseFeatures;
+    try {
+      baseFeatures = await buildResolvedBaseFeatures(memos);
+    } catch (e) {
+      showToast('写真読込失敗: ' + e.message, 'error');
+      return;
+    }
+
     const today = new Date();
     const defaultName = `現場メモ_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
-    const layerName = window.prompt(
-      'PC版で取り込み時のレイヤ名（ファイル名にも使用）を入力してください\n' +
-      '空欄のままOKすると既定名で出力します',
-      defaultName
-    );
-    if (layerName === null) return; // ユーザーがキャンセル
-    const finalName = (layerName || '').trim();
     const { mb } = estimateExportSize(memos);
-    if (!confirm(`「${finalName || defaultName}」として\n現場メモ ${memos.length}件 / 約 ${mb.toFixed(2)} MB を共有しますか？`)) return;
-    try {
-      const r = await shareOrDownload(finalName || defaultName);
-      if (r.method === 'share') {
-        showToast('共有しました', 'success');
-      } else if (r.method === 'abort') {
-        showToast('共有をキャンセルしました', 'warning');
-      } else if (r.method === 'download') {
-        // 共有シートが出なかった理由を表示してから blob download にフォールバック
-        if (r.diag) {
-          showToast('共有不可: ' + r.diag + ' → ダウンロードに切替', 'warning');
-          // 5秒待ってからdownload発火 (トースト確認時間)
-          await new Promise(res => setTimeout(res, 1500));
-        }
-        if (r._doDownload && r._blob && r._filename) {
-          const ok = performBlobDownload(r._blob, r._filename);
-          if (ok) showToast('ダウンロードしました: ' + r._filename, 'success');
+    const summaryText = `${memos.length} 件 / 約 ${mb.toFixed(2)} MB`;
+
+    openShareModal({
+      defaultName,
+      summaryText,
+      // 送信ボタンクリックは fresh user gesture。share() を同期で呼び gesture を保持
+      onSend: (finalName) => {
+        const geojson = applyLayerNameAndBuild(baseFeatures, finalName);
+        const blob = new Blob([JSON.stringify(geojson)], { type: 'application/json' });
+        const filename = buildFilenameForName(finalName);
+        const file = new File([blob], filename, { type: 'application/json' });
+
+        const hasShare = typeof navigator.share === 'function';
+        const canShareFiles = hasShare && typeof navigator.canShare === 'function' &&
+                              navigator.canShare({ files: [file] });
+        console.log('[Share Diag]', {
+          hasShare,
+          canShareFiles,
+          fileName: file.name, fileType: file.type, fileSize: file.size,
+          userAgent: navigator.userAgent
+        });
+
+        if (!hasShare || !canShareFiles) {
+          showToast('共有不可 (canShare=' + canShareFiles + ') → ダウンロード', 'warning');
+          const ok = performBlobDownload(blob, filename);
+          if (ok) showToast('ダウンロードしました: ' + filename, 'success');
           else showToast('ダウンロードにも失敗', 'error');
+          return;
         }
-      } else if (r.method === 'failed') {
-        showToast('エクスポート失敗: ' + r.error, 'error');
+
+        // navigator.share を同期で呼ぶ (ここ重要: await/.then前のこの行が gesture を消費する)
+        const sharePromise = navigator.share({
+          files: [file],
+          title: '現場メモ',
+          text: `現場メモ ${memos.length}件`
+        });
+        sharePromise.then(() => {
+          showToast('共有しました', 'success');
+        }).catch((e) => {
+          if (e.name === 'AbortError') {
+            showToast('共有をキャンセルしました', 'warning');
+            return;
+          }
+          console.warn('navigator.share threw:', e);
+          showToast('共有失敗 (' + e.name + ') → ダウンロード', 'warning');
+          const ok = performBlobDownload(blob, filename);
+          if (ok) showToast('ダウンロードしました: ' + filename, 'success');
+        });
       }
-    } catch (e) {
-      showToast('エクスポート失敗: ' + e.message, 'error');
-    }
+    });
   });
 }
 
