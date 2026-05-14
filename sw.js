@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.3.0';
+const CACHE_VERSION = 'v1.3.1';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const DATA_CACHE = `data-${CACHE_VERSION}`;
 const TILE_CACHE = 'tiles-v1';
@@ -21,7 +21,6 @@ const SHELL_URLS = [
   '/js/photo_store.js',
   '/js/migration.js',
   '/js/orphan_gc.js',
-  '/js/onedrive_share.js',
   '/js/toast.js',
   '/js/app.js',
   '/icons/icon-192.png',

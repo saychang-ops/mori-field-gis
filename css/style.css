@@ -17,14 +17,13 @@ body {
 #search-bar {
   display: flex; gap: 4px; flex: 1; min-width: 0;
 }
-#search-type, #search-input, #search-btn, #share-btn, #onedrive-btn, #clear-all-btn {
+#search-type, #search-input, #search-btn, #share-btn, #clear-all-btn {
   font-size: 14px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
   background: #fff;
 }
 #search-input { flex: 1; min-width: 0; }
-#search-btn, #share-btn, #onedrive-btn, #clear-all-btn { cursor: pointer; }
+#search-btn, #share-btn, #clear-all-btn { cursor: pointer; }
 #clear-all-btn { border-color: #e63946; color: #e63946; }
-#onedrive-btn.configured { border-color: #1976d2; color: #1976d2; background: #e3f2fd; }
 
 #map-container {
   position: relative; flex: 1; min-height: 0;
