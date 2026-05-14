@@ -84,9 +84,9 @@ export async function shareOrDownload(layerName) {
   const memos = loadMemos();
   const geojson = await buildExportGeoJSON(memos, layerName);
   const jsonStr = JSON.stringify(geojson);
-  const blob = new Blob([jsonStr], { type: 'application/geo+json' });
+  const blob = new Blob([jsonStr], { type: 'application/json' });
   const filename = buildFilename(layerName);
-  const file = new File([blob], filename, { type: 'application/geo+json' });
+  const file = new File([blob], filename, { type: 'application/json' });
 
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
