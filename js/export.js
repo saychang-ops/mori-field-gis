@@ -29,55 +29,9 @@ async function resolvePhotos(photos) {
   return out;
 }
 
-// v1.3.5: ユーザー操作 (送信ボタンクリック) の gesture を保ったまま
-// navigator.share() を呼び出すため、写真解決を「事前」に行い、レイヤ名適用は
-// 「同期」関数として分離。これにより送信クリック→share() の間に async/await を
-// 挟まずに済むので、Chrome の transient activation が期限切れにならない。
-
-// 写真IDB→dataURL解決のみ済ませた中間feature配列を生成 (async、時間がかかる)
-export async function buildResolvedBaseFeatures(memos) {
-  const features = [];
-  for (const memo of memos) {
-    const props = { ...memo.properties };
-    props.photos = await resolvePhotos(props.photos);
-    features.push({ ...memo, properties: props });
-  }
-  return features;
-}
-
-// レイヤ名を適用して最終的なGeoJSON FeatureCollectionを返す (同期)
-export function applyLayerNameAndBuild(baseFeatures, layerName) {
-  const trimmedName = (layerName || '').trim();
-  let layerId = null;
-  let layerLabel = null;
-  if (trimmedName) {
-    const slug = trimmedName.replace(/[^\w぀-ヿ一-鿿-]/g, '_').slice(0, 40);
-    layerId = `smartphone_${slug}_${Date.now()}`;
-    layerLabel = trimmedName;
-  }
-  const features = baseFeatures.map(f => {
-    const props = { ...f.properties };
-    if (layerId) {
-      props._custom_layer_id = layerId;
-      props._custom_layer_name = layerLabel;
-    }
-    return { ...f, properties: props };
-  });
-  return {
-    type: 'FeatureCollection',
-    _export_meta: {
-      source: 'mori-field-gis',
-      version: CONFIG.version,
-      exported_at: new Date().toISOString(),
-      device: 'smartphone',
-      layer_name: layerLabel || null
-    },
-    features
-  };
-}
-
-// 後方互換用: 旧API (memos -> resolve -> apply の一気通貫)。新コードからは
-// buildResolvedBaseFeatures + applyLayerNameAndBuild の組合せ推奨。
+// v1.2.0: 任意でレイヤ名を指定可能。指定された場合は各featureの _custom_layer_id を一意化し、
+// _custom_layer_name を指定名に上書き → PC版で新規レイヤとして取り込まれる。
+// 指定なしの場合は従来通り 'smartphone_field_memo' (後方互換)
 export async function buildExportGeoJSON(memos, layerName) {
   const trimmedName = (layerName || '').trim();
   let layerId = null;
@@ -130,43 +84,24 @@ export async function shareOrDownload(layerName) {
   const memos = loadMemos();
   const geojson = await buildExportGeoJSON(memos, layerName);
   const jsonStr = JSON.stringify(geojson);
-  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const blob = new Blob([jsonStr], { type: 'application/geo+json' });
   const filename = buildFilename(layerName);
-  const file = new File([blob], filename, { type: 'application/json' });
+  const file = new File([blob], filename, { type: 'application/geo+json' });
 
-  // 診断: Web Share API のサポート状況を可視化
-  const hasShare = typeof navigator.share === 'function';
-  const hasCanShare = typeof navigator.canShare === 'function';
-  const canShareFiles = hasCanShare ? navigator.canShare({ files: [file] }) : false;
-  console.log('[Share Diag]', {
-    hasShare, hasCanShare, canShareFiles,
-    fileName: file.name, fileType: file.type, fileSize: file.size,
-    userAgent: navigator.userAgent
-  });
-
-  if (!hasShare) {
-    return { method: 'download', count: memos.length, diag: 'no-share-api', _doDownload: true, _blob: blob, _filename: filename };
-  }
-  if (!canShareFiles) {
-    return { method: 'download', count: memos.length, diag: 'canShare-false', _doDownload: true, _blob: blob, _filename: filename };
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file],
+        title: '現場メモ',
+        text: `現場メモ ${memos.length}件`
+      });
+      return { method: 'share', count: memos.length };
+    } catch (e) {
+      if (e.name === 'AbortError') return { method: 'abort' };
+      console.warn('share failed, falling back to download:', e);
+    }
   }
 
-  try {
-    await navigator.share({
-      files: [file],
-      title: '現場メモ',
-      text: `現場メモ ${memos.length}件`
-    });
-    return { method: 'share', count: memos.length };
-  } catch (e) {
-    if (e.name === 'AbortError') return { method: 'abort' };
-    console.warn('share failed, falling back to download:', e);
-    return { method: 'download', count: memos.length, diag: 'share-threw:' + e.name + ':' + (e.message || ''), _doDownload: true, _blob: blob, _filename: filename };
-  }
-}
-
-// shareOrDownload が返した _doDownload フラグに従って blob ダウンロードを発火
-export function performBlobDownload(blob, filename) {
   try {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -178,20 +113,17 @@ export function performBlobDownload(blob, filename) {
       URL.revokeObjectURL(url);
       a.remove();
     }, 10000);
-    return true;
+    return { method: 'download', count: memos.length };
   } catch (e) {
-    console.error('blob download failed:', e);
-    return false;
+    console.error('download fallback failed:', e);
+    return { method: 'failed', count: memos.length, error: e.message };
   }
 }
 
 function buildFilename(layerName) {
-  // 拡張子は .json に固定 (Chrome の Web Share API が .geojson 拡張子を
-  // 許可リスト外と判定し、共有シートを出さずにblob downloadに落ちるため)。
-  // PC版v1.6.0以降は .json も .geojson も両方取込対応。
-  const safe = sanitizeFilename(layerName).replace(/\.(geo)?json$/i, '');
+  const safe = sanitizeFilename(layerName);
   if (safe) {
-    return `${safe}.json`;
+    return safe.endsWith('.geojson') ? safe : `${safe}.geojson`;
   }
   // 名前未指定なら従来のタイムスタンプ形式
   const d = new Date();
@@ -200,5 +132,5 @@ function buildFilename(layerName) {
   const day = String(d.getDate()).padStart(2, '0');
   const hh = String(d.getHours()).padStart(2, '0');
   const mm = String(d.getMinutes()).padStart(2, '0');
-  return `field_memos_${y}${m}${day}_${hh}${mm}.json`;
+  return `field_memos_${y}${m}${day}_${hh}${mm}.geojson`;
 }
