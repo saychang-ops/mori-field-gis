@@ -7,7 +7,8 @@ import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
 import { highlightLineFeature, highlightPointFeature, clearHighlight } from './highlight.js';
-import { shareOrDownload, estimateExportSize } from './export.js';
+import { shareOrDownload, estimateExportSize, buildExportGeoJSON, sanitizeFilename } from './export.js';
+import * as OneDriveShare from './onedrive_share.js';
 import { loadMemos } from './storage.js';
 import { migratePhotosToIndexedDB } from './migration.js';
 import { cleanupOrphans } from './orphan_gc.js';
@@ -45,6 +46,7 @@ async function main() {
 
   wireFab(map);
   wireShareButton();
+  wireOneDriveButton();
   wireClearAllButton();
   setupSearchHandlers(map, roadFeatures, bridgeFeatures);
 
@@ -109,17 +111,45 @@ function wireShareButton() {
     }
     const today = new Date();
     const defaultName = `現場メモ_${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+
+    // OneDrive 直接送信フォルダが設定されているか確認
+    let folderInfo = null;
+    try { folderInfo = await OneDriveShare.getStoredFolderInfo(); }
+    catch (e) { console.warn('OneDrive folder lookup failed:', e); }
+
     const layerName = window.prompt(
       'PC版で取り込み時のレイヤ名（ファイル名にも使用）を入力してください\n' +
       '空欄のままOKすると既定名で出力します',
       defaultName
     );
     if (layerName === null) return; // ユーザーがキャンセル
-    const finalName = (layerName || '').trim();
+    const finalName = (layerName || '').trim() || defaultName;
     const { mb } = estimateExportSize(memos);
-    if (!confirm(`「${finalName || defaultName}」として\n現場メモ ${memos.length}件 / 約 ${mb.toFixed(2)} MB を共有しますか？`)) return;
+
+    const destLabel = folderInfo
+      ? `OneDriveフォルダ「${folderInfo.name}」へ`
+      : '';
+    const overwriteNote = folderInfo ? '\n(同名ファイルは上書きされます)' : '';
+    if (!confirm(`${destLabel}「${finalName}」として\n現場メモ ${memos.length}件 / 約 ${mb.toFixed(2)} MB を送信しますか？${overwriteNote}`)) return;
+
     try {
-      const r = await shareOrDownload(finalName || defaultName);
+      if (folderInfo) {
+        // OneDrive 直接書込みパス
+        const geojson = await buildExportGeoJSON(memos, finalName);
+        const blob = new Blob([JSON.stringify(geojson)], { type: 'application/geo+json' });
+        const safeName = sanitizeFilename(finalName);
+        const filename = safeName.endsWith('.geojson') ? safeName : `${safeName}.geojson`;
+        try {
+          await OneDriveShare.writeFileToFolder(folderInfo.handle, filename, blob);
+          showToast(`OneDrive「${folderInfo.name}/${filename}」に送信しました`, 'success');
+          return;
+        } catch (e) {
+          console.warn('OneDrive write failed, falling back to web share:', e);
+          showToast('OneDrive送信失敗: ' + (e.message || e) + ' → 共有メニューに切替', 'warning');
+          // フォールスルー
+        }
+      }
+      const r = await shareOrDownload(finalName);
       if (r.method === 'share') showToast('共有しました', 'success');
       else if (r.method === 'download') showToast('ダウンロードしました', 'success');
       else if (r.method === 'failed') showToast('エクスポート失敗: ' + r.error, 'error');
@@ -127,6 +157,66 @@ function wireShareButton() {
       showToast('エクスポート失敗: ' + e.message, 'error');
     }
   });
+}
+
+function wireOneDriveButton() {
+  const btn = document.getElementById('onedrive-btn');
+  if (!btn) return;
+
+  updateOneDriveButtonState();
+
+  btn.addEventListener('click', async () => {
+    if (!OneDriveShare.isSupported()) {
+      showToast('この端末ではOneDrive直接送信は使えません (iOS Safari非対応)', 'warning');
+      return;
+    }
+    const current = await OneDriveShare.getStoredFolderInfo();
+    if (current) {
+      const choice = confirm(
+        `現在のOneDriveフォルダ: ${current.name}\n\n` +
+        'OK = 別のフォルダに変更\n' +
+        'キャンセル = この設定を解除'
+      );
+      if (choice) {
+        try {
+          const { name } = await OneDriveShare.selectOneDriveFolder();
+          showToast(`OneDriveフォルダを「${name}」に変更しました`, 'success');
+        } catch (e) {
+          if (e.name === 'AbortError') return;
+          showToast('フォルダ選択失敗: ' + e.message, 'error');
+        }
+      } else {
+        await OneDriveShare.clearStoredFolder();
+        showToast('OneDriveフォルダ設定を解除しました', 'success');
+      }
+    } else {
+      try {
+        const { name } = await OneDriveShare.selectOneDriveFolder();
+        showToast(`OneDriveフォルダ「${name}」を設定しました`, 'success');
+      } catch (e) {
+        if (e.name === 'AbortError') return;
+        showToast('フォルダ選択失敗: ' + e.message, 'error');
+      }
+    }
+    updateOneDriveButtonState();
+  });
+}
+
+async function updateOneDriveButtonState() {
+  const btn = document.getElementById('onedrive-btn');
+  if (!btn) return;
+  try {
+    const info = await OneDriveShare.getStoredFolderInfo();
+    if (info) {
+      btn.classList.add('configured');
+      btn.title = `OneDriveフォルダ: ${info.name} (タップで変更/解除)`;
+    } else {
+      btn.classList.remove('configured');
+      btn.title = 'OneDriveフォルダ設定';
+    }
+  } catch (e) {
+    console.warn('updateOneDriveButtonState failed:', e);
+  }
 }
 
 function showAddMenu() {
