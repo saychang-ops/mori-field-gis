@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v1.3.6';
+const CACHE_VERSION = 'v1.4.0';
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const DATA_CACHE = `data-${CACHE_VERSION}`;
 const TILE_CACHE = 'tiles-v1';
@@ -22,6 +22,9 @@ const SHELL_URLS = [
   '/js/migration.js',
   '/js/orphan_gc.js',
   '/js/toast.js',
+  '/js/layer_store.js',
+  '/js/sync.js',
+  '/js/layer_panel.js',
   '/js/app.js',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
