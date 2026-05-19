@@ -134,6 +134,32 @@ export async function triggerLayerSync(layerId) {
   }
 }
 
+// 双方向同期: ローカルとリモートのフィーチャを _id 単位でマージ（_updated 新しい方を採用）
+export function mergeLayerFeatures(local, remote) {
+  const byId = {};
+  const order = [];
+  (Array.isArray(local) ? local : []).forEach((feat) => {
+    const id = feat && feat.properties && feat.properties._id;
+    if (!id) return;
+    if (!byId[id]) order.push(id);
+    byId[id] = feat;
+  });
+  (Array.isArray(remote) ? remote : []).forEach((feat) => {
+    const id = feat && feat.properties && feat.properties._id;
+    if (!id) return;
+    const cur = byId[id];
+    if (!cur) {
+      order.push(id);
+      byId[id] = feat;
+    } else {
+      const curU = (cur.properties && cur.properties._updated) || '';
+      const incU = (feat.properties && feat.properties._updated) || '';
+      if (incU >= curU) byId[id] = feat;
+    }
+  });
+  return order.map((id) => byId[id]);
+}
+
 // 起動時・online復帰時にキューを処理
 export async function processQueue() {
   const q = loadQueue();
