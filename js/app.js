@@ -11,8 +11,17 @@ import { shareOrDownload, estimateExportSize } from './export.js';
 import { loadMemos } from './storage.js';
 import { migratePhotosToIndexedDB } from './migration.js';
 import { cleanupOrphans } from './orphan_gc.js';
+import { ensureMigrated } from './layer_store.js';
+import { initLayerPanel } from './layer_panel.js';
+import { processQueue } from './sync.js';
 
 async function main() {
+  try {
+    ensureMigrated();
+  } catch (e) {
+    console.warn('layer migration failed:', e);
+  }
+
   try {
     await migratePhotosToIndexedDB();
   } catch (e) {
@@ -42,6 +51,7 @@ async function main() {
 
   initMemoLayer(map);
   initFormHandlers();
+  initLayerPanel();
 
   wireFab(map);
   wireShareButton();
@@ -66,6 +76,14 @@ async function main() {
   };
   scheduleIdle(() => {
     cleanupOrphans().catch((e) => console.warn('orphan GC failed:', e));
+  });
+
+  // 未送信キューを起動時に処理 + online復帰時に再処理
+  processQueue().catch((e) => console.warn('queue process failed:', e));
+  window.addEventListener('online', () => {
+    processQueue()
+      .then((r) => { if (r.sent > 0) showToast(`${r.sent}件のレイヤを同期しました`, 'success'); })
+      .catch((e) => console.warn('queue process failed:', e));
   });
 }
 
