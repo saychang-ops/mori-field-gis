@@ -1,16 +1,16 @@
 import { listAllRefIds, deletePhoto } from './photo_store.js';
-
-const MEMOS_KEY = 'mori_field_memos';
+import { loadLayers, loadLayerMemos } from './layer_store.js';
 
 export async function cleanupOrphans() {
-  const raw = localStorage.getItem(MEMOS_KEY);
-  const memos = raw ? JSON.parse(raw) : [];
   const referenced = new Set();
-  for (const m of memos) {
-    const photos = (m.properties && m.properties.photos) || [];
-    for (const p of photos) {
-      if (typeof p === 'string' && p.startsWith('idb:')) {
-        referenced.add(p);
+  for (const layer of loadLayers()) {
+    const memos = loadLayerMemos(layer.id);
+    for (const m of memos) {
+      const photos = (m.properties && m.properties.photos) || [];
+      for (const p of photos) {
+        if (typeof p === 'string' && p.startsWith('idb:')) {
+          referenced.add(p);
+        }
       }
     }
   }

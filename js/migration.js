@@ -1,6 +1,6 @@
 import { openDB, putPhoto } from './photo_store.js';
+import { loadLayers, loadLayerMemos, saveLayerMemos } from './layer_store.js';
 
-const MEMOS_KEY = 'mori_field_memos';
 const FLAG_KEY = 'mori_field_migration_v1';
 
 async function dataUrlToBlob(dataUrl) {
@@ -24,30 +24,31 @@ export async function migratePhotosToIndexedDB() {
   if (localStorage.getItem(FLAG_KEY) === 'done') return;
 
   await openDB();
-  const raw = localStorage.getItem(MEMOS_KEY);
-  const memos = raw ? JSON.parse(raw) : [];
 
-  let touched = false;
-  for (const memo of memos) {
-    const props = memo.properties || {};
-    const photos = Array.isArray(props.photos) ? props.photos : [];
-    const newPhotos = [];
-    for (let i = 0; i < photos.length; i++) {
-      const p = photos[i];
-      if (typeof p === 'string' && p.startsWith('data:')) {
-        const blob = await dataUrlToBlob(p);
-        const refId = await putPhoto(blob, props._id || `unknown_${Date.now()}`, i);
-        newPhotos.push(refId);
-        touched = true;
-      } else {
-        newPhotos.push(p);
+  for (const layer of loadLayers()) {
+    const memos = loadLayerMemos(layer.id);
+    let touched = false;
+    for (const memo of memos) {
+      const props = memo.properties || {};
+      const photos = Array.isArray(props.photos) ? props.photos : [];
+      const newPhotos = [];
+      for (let i = 0; i < photos.length; i++) {
+        const p = photos[i];
+        if (typeof p === 'string' && p.startsWith('data:')) {
+          const blob = await dataUrlToBlob(p);
+          const refId = await putPhoto(blob, props._id || `unknown_${Date.now()}`, i);
+          newPhotos.push(refId);
+          touched = true;
+        } else {
+          newPhotos.push(p);
+        }
       }
+      props.photos = newPhotos;
     }
-    props.photos = newPhotos;
+    if (touched) {
+      saveLayerMemos(layer.id, memos);
+    }
   }
 
-  if (touched) {
-    localStorage.setItem(MEMOS_KEY, JSON.stringify(memos));
-  }
   localStorage.setItem(FLAG_KEY, 'done');
 }
