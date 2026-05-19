@@ -2,7 +2,7 @@ import { CONFIG } from './config.js';
 import { initMap, toggleBasemap } from './map.js';
 import { loadTownRoads, loadTownBridges } from './layers.js';
 import { centerOnCurrentLocation, startWatching } from './gps.js';
-import { initMemoLayer, startPointMode, startLineMode, clearAllMemos } from './register.js';
+import { initMemoLayer, startPointMode, startLineMode, clearAllMemos, rebuildMemoLayer } from './register.js';
 import { initFormHandlers } from './form.js';
 import { showToast } from './toast.js';
 import { searchRoads, searchBridges, geocodeAddress, reverseGeocodeNearby } from './search.js';
@@ -13,7 +13,7 @@ import { migratePhotosToIndexedDB } from './migration.js';
 import { cleanupOrphans } from './orphan_gc.js';
 import { ensureMigrated } from './layer_store.js';
 import { initLayerPanel } from './layer_panel.js';
-import { processQueue } from './sync.js';
+import { processQueue, pullAllLayers } from './sync.js';
 
 async function main() {
   try {
@@ -92,6 +92,19 @@ async function main() {
         if (r.failed > 0) showToast('一部のレイヤ同期に失敗しました。再接続時に再試行します', 'warning');
       })
       .catch((e) => console.warn('queue process failed:', e));
+  });
+
+  // 双方向同期: 起動時とフォアグラウンド復帰時にGCSから取得
+  function pullAndRefresh(reason) {
+    pullAllLayers()
+      .then((r) => {
+        if (r.pulled > 0) { rebuildMemoLayer(); }
+      })
+      .catch((e) => console.warn('pullAllLayers failed (' + reason + '):', e));
+  }
+  pullAndRefresh('startup');
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') pullAndRefresh('foreground');
   });
 }
 
