@@ -5,7 +5,7 @@ import { loadMemos, saveMemos } from './storage.js';
 import { showToast } from './toast.js';
 import { setTownLayersInteractive } from './layers.js';
 import { getPhotoUrl, deletePhotosByMemoId, clearAll as clearAllPhotos } from './photo_store.js';
-import { loadLayers, loadLayerMemos, saveLayerMemos, getActiveLayerId, findMemoLayerId } from './layer_store.js';
+import { loadLayers, loadLayerMemos, saveLayerMemos, getActiveLayerId, findMemoLayerId, countLiveMemos } from './layer_store.js';
 import { triggerLayerSync, getRemotePhotoDataUrl } from './sync.js';
 
 let memoLayerGroup = null;
@@ -294,7 +294,7 @@ function cleanupPointMode() {
 }
 
 function updateMemoCount() {
-  const count = loadMemos().length;
+  const count = countLiveMemos(loadMemos());
   const el = document.getElementById('memo-count');
   if (el) el.textContent = `${count}件`;
 }
@@ -352,14 +352,20 @@ export function rebuildMemoLayer() {
 export function clearAllMemos() {
   const activeId = getActiveLayerId();
   const layer = loadLayers().find((l) => l.id === activeId);
-  const count = loadMemos().length;
+  const memos = loadMemos();
+  const count = countLiveMemos(memos);
   if (!layer || count === 0) {
     showToast('削除するメモがありません', 'warning');
     return;
   }
   if (!confirm(`レイヤ「${layer.name}」の ${count}件 をすべて削除しますか？\n元に戻せません。`)) return;
   if (!confirm('本当に削除しますか？')) return;
-  const result = saveMemos([]);
+  const now = new Date().toISOString();
+  const tombstoned = memos.map((m) => {
+    if (m && m.properties && m.properties._deleted) return m;
+    return { ...m, properties: { ...m.properties, _deleted: true, _updated: now } };
+  });
+  const result = saveMemos(tombstoned);
   if (!result.ok) {
     showToast('削除失敗: ' + result.message, 'error');
     return;

@@ -107,6 +107,13 @@ export function findMemoLayerId(memoId) {
   return null;
 }
 
+// _deleted tombstone を除いた生存メモ数
+export function countLiveMemos(memos) {
+  return (Array.isArray(memos) ? memos : []).filter(
+    (m) => !(m && m.properties && m.properties._deleted)
+  ).length;
+}
+
 export function ensureMigrated() {
   if (loadJSON(K.layers, null) !== null) return { migrated: false };
   const legacy = loadJSON(K.legacy, []) || [];

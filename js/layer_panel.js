@@ -1,7 +1,8 @@
 // mori-field-gis/js/layer_panel.js
 import {
   loadLayers, createLayer, renameLayer, setLayerVisible, deleteLayer,
-  getActiveLayerId, setActiveLayerId, loadLayerMemos, MAX_LAYERS, importLayer
+  getActiveLayerId, setActiveLayerId, loadLayerMemos, MAX_LAYERS, importLayer,
+  countLiveMemos
 } from './layer_store.js';
 import { rebuildMemoLayer } from './register.js';
 import { deleteLayerRemote, triggerLayerSync, listRemoteLayers, pullLayer } from './sync.js';
@@ -23,7 +24,7 @@ function renderLayerList() {
   layers.forEach((layer) => {
     const row = document.createElement('div');
     row.className = 'layer-row' + (layer.id === activeId ? ' active' : '');
-    const count = loadLayerMemos(layer.id).length;
+    const count = countLiveMemos(loadLayerMemos(layer.id));
     row.innerHTML = `
       <input type="checkbox" class="layer-vis" ${layer.visible ? 'checked' : ''} />
       <input type="radio" name="active-layer" class="layer-active" ${layer.id === activeId ? 'checked' : ''} />

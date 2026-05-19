@@ -29,4 +29,11 @@ describe('mergeLayerFeatures', () => {
     const r = mergeLayerFeatures([f('A', '2026-05-20T01:00:00Z')], [f('A', '2026-05-20T05:00:00Z', { _deleted: true })]);
     expect(r[0].properties._deleted).toBe(true);
   });
+  it('_updated が同値なら remote を採用する（LWWはincoming優先）', () => {
+    const r = mergeLayerFeatures(
+      [f('A', '2026-05-20T03:00:00Z', { name: 'local' })],
+      [f('A', '2026-05-20T03:00:00Z', { name: 'remote' })]
+    );
+    expect(r[0].properties.name).toBe('remote');
+  });
 });

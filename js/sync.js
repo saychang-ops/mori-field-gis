@@ -159,8 +159,10 @@ export async function pullLayer(layerId) {
 // スマホが保持する全レイヤをGCSから取得・マージ
 export async function pullAllLayers() {
   const layers = loadLayers();
+  const queued = loadQueue();
   const result = { pulled: 0, failed: 0 };
   for (const layer of layers) {
+    if (queued.indexOf(layer.id) !== -1) continue;
     try {
       const r = await pullLayer(layer.id);
       if (r.ok) result.pulled++;

@@ -42,8 +42,12 @@ export async function buildExportGeoJSON(memos, layerName) {
     layerLabel = trimmedName;
   }
 
+  const liveMemos = (Array.isArray(memos) ? memos : []).filter(
+    (m) => !(m && m.properties && m.properties._deleted)
+  );
+
   const features = [];
-  for (const memo of memos) {
+  for (const memo of liveMemos) {
     const props = { ...memo.properties };
     props.photos = await resolvePhotos(props.photos);
     if (layerId) {
@@ -71,9 +75,12 @@ export function sanitizeFilename(name) {
 }
 
 export function estimateExportSize(memos) {
+  const liveMemos = (Array.isArray(memos) ? memos : []).filter(
+    (m) => !(m && m.properties && m.properties._deleted)
+  );
   const json = JSON.stringify({
     type: 'FeatureCollection',
-    features: memos,
+    features: liveMemos,
     _export_meta: { source: 'mori-field-gis', version: CONFIG.version }
   });
   const bytes = new Blob([json]).size;
