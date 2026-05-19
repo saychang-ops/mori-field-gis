@@ -46,13 +46,21 @@ export function collectUnmappedPhotoRefs(memos, photoMap) {
 }
 
 async function postAction(payload) {
-  const res = await fetch(CONFIG.api.syncEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.json();
+  // Fix I4: 15秒タイムアウト（モバイル不安定回線対策）
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(CONFIG.api.syncEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 // 1レイヤを同期: 未アップ写真をuploadPhoto→uploadLayer
@@ -65,15 +73,35 @@ export async function syncLayer(layerId) {
   const photoMap = loadPhotoMap();
   const unmapped = collectUnmappedPhotoRefs(memos, photoMap);
 
+  // Fix I1+M5: 写真1枚の失敗でレイヤ全体の同期を止めない
+  const failedRefs = new Set();
   for (const idbRef of unmapped) {
-    const dataUrl = await getPhotoAsDataUrl(idbRef);
-    const base64 = dataUrl.replace(/^data:[^,]+,/, '');
-    const r = await postAction({ action: 'uploadPhoto', layerId, image: base64 });
-    photoMap[idbRef] = 'gcs:' + layerId + ':' + r.photoId;
-    savePhotoMap(photoMap);
+    try {
+      const dataUrl = await getPhotoAsDataUrl(idbRef);
+      const base64 = dataUrl.replace(/^data:[^,]+,/, '');
+      const r = await postAction({ action: 'uploadPhoto', layerId, image: base64 });
+      photoMap[idbRef] = 'gcs:' + layerId + ':' + r.photoId;
+      savePhotoMap(photoMap);
+    } catch (e) {
+      console.warn('syncLayer: photo upload failed, skipping ref:', idbRef, e);
+      failedRefs.add(idbRef);
+    }
   }
 
-  const features = substitutePhotoRefs(memos, photoMap);
+  // substitutePhotoRefs で置換後も残った idb: 参照（失敗分）をフィルタ除去
+  const PHOTO_FIELDS = ['photos', 'photos_before', 'photos_after'];
+  const features = substitutePhotoRefs(memos, photoMap).map((f) => {
+    const p = Object.assign({}, f.properties || {});
+    PHOTO_FIELDS.forEach((field) => {
+      if (Array.isArray(p[field])) {
+        p[field] = p[field].filter(
+          (ref) => !(typeof ref === 'string' && ref.startsWith('idb:'))
+        );
+      }
+    });
+    return Object.assign({}, f, { properties: p });
+  });
+
   await postAction({
     action: 'uploadLayer',
     layerId,

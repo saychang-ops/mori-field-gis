@@ -79,10 +79,18 @@ async function main() {
   });
 
   // 未送信キューを起動時に処理 + online復帰時に再処理
-  processQueue().catch((e) => console.warn('queue process failed:', e));
+  processQueue()
+    .then((r) => {
+      if (r.sent > 0) showToast(`${r.sent}件のレイヤを同期しました`, 'success');
+      if (r.failed > 0) showToast('一部のレイヤ同期に失敗しました。再接続時に再試行します', 'warning');
+    })
+    .catch((e) => console.warn('queue process failed:', e));
   window.addEventListener('online', () => {
     processQueue()
-      .then((r) => { if (r.sent > 0) showToast(`${r.sent}件のレイヤを同期しました`, 'success'); })
+      .then((r) => {
+        if (r.sent > 0) showToast(`${r.sent}件のレイヤを同期しました`, 'success');
+        if (r.failed > 0) showToast('一部のレイヤ同期に失敗しました。再接続時に再試行します', 'warning');
+      })
       .catch((e) => console.warn('queue process failed:', e));
   });
 }

@@ -72,7 +72,8 @@ export function setLayerVisible(id, visible) {
 
 export function deleteLayer(id) {
   const remaining = loadLayers().filter((x) => x.id !== id);
-  saveLayers(remaining);
+  const saveResult = saveLayers(remaining);  // Fix M1: propagate save failure
+  if (!saveResult.ok) return saveResult;
   localStorage.removeItem(K.memosPrefix + id);
   if (getActiveLayerId() === id) {
     setActiveLayerId(remaining.length ? remaining[0].id : null);

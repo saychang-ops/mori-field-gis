@@ -25,7 +25,10 @@ export async function migratePhotosToIndexedDB() {
 
   await openDB();
 
-  for (const layer of loadLayers()) {
+  const layers = loadLayers();
+  if (layers.length === 0) return;  // Fix C1: nothing to migrate; retry on next launch
+
+  for (const layer of layers) {
     const memos = loadLayerMemos(layer.id);
     let touched = false;
     for (const memo of memos) {

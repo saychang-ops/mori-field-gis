@@ -1,5 +1,5 @@
 // mori-field-gis/tests/sync.test.js
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   loadPhotoMap, savePhotoMap, loadQueue, saveQueue,
   enqueueLayer, dequeueLayer, substitutePhotoRefs, collectUnmappedPhotoRefs
@@ -51,3 +51,4 @@ describe('collectUnmappedPhotoRefs', () => {
     expect(collectUnmappedPhotoRefs(memos, map)).toEqual(['idb:b', 'idb:c']);
   });
 });
+

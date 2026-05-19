@@ -87,8 +87,16 @@ describe('migratePhotosToIndexedDB', () => {
     expect(after[0].properties.photos[1]).toMatch(/^idb:M400_/);
   });
 
-  it('メモ無しでも安全に完走しフラグを立てる', async () => {
+  it('レイヤが0件のときはフラグを立てずに早期リターンする (Fix C1)', async () => {
     const { migratePhotosToIndexedDB } = await import('../js/migration.js');
+    // no layers created → loadLayers() returns []
+    await migratePhotosToIndexedDB();
+    expect(localStorage.getItem(FLAG_KEY)).toBeNull();  // must NOT be set; next launch retries
+  });
+
+  it('レイヤが1件以上あり写真なしでも完走しフラグを立てる', async () => {
+    const { migratePhotosToIndexedDB } = await import('../js/migration.js');
+    createLayer('空レイヤ');
     await migratePhotosToIndexedDB();
     expect(localStorage.getItem(FLAG_KEY)).toBe('done');
   });
