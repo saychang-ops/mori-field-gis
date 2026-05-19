@@ -136,6 +136,17 @@ export async function clearAll() {
   await reqAsPromise(tx(db, 'readwrite').clear());
 }
 
+// 案D同期用: idb参照の写真を data:image/jpeg;base64,... 文字列で取得
+export async function getPhotoAsDataUrl(ref) {
+  const blob = await getPhoto(ref);
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('FileReader failed'));
+    reader.readAsDataURL(blob);
+  });
+}
+
 export async function _resetForTests() {
   for (const url of blobUrlCache.values()) {
     try { URL.revokeObjectURL(url); } catch (_) {}
