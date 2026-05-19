@@ -147,6 +147,7 @@ function loadVisibleMemos() {
   loadLayers().forEach((layer) => {
     if (!layer.visible) return;
     loadLayerMemos(layer.id).forEach((m) => {
+      if (m.properties && m.properties._deleted) return;
       m.properties = m.properties || {};
       m.properties._layer_id = layer.id;
       out.push(m);
@@ -189,6 +190,7 @@ function openMemoFormForPoint(latlng) {
       const activeId = getActiveLayerId();
       feature.properties = feature.properties || {};
       feature.properties._layer_id = activeId;
+      feature.properties._updated = new Date().toISOString();
       const memos = loadMemos();
       memos.push(feature);
       const result = saveMemos(memos);
@@ -292,6 +294,7 @@ export function editMemoById(id) {
     onSave: (updated) => {
       updated.properties = updated.properties || {};
       updated.properties._layer_id = layerId;
+      updated.properties._updated = new Date().toISOString();
       const idx = memos.findIndex((m) => m.properties._id === id);
       memos[idx] = updated;
       saveLayerMemos(layerId, memos);
@@ -308,7 +311,11 @@ export function deleteMemoById(id) {
   if (!confirm('このメモを削除しますか？')) return;
   const layerId = findMemoLayerId(id);
   if (!layerId) return;
-  const memos = loadLayerMemos(layerId).filter((m) => m.properties._id !== id);
+  const memos = loadLayerMemos(layerId);
+  const target = memos.find((m) => m.properties._id === id);
+  if (!target) return;
+  target.properties._deleted = true;
+  target.properties._updated = new Date().toISOString();
   saveLayerMemos(layerId, memos);
   deletePhotosByMemoId(id).catch((e) => console.warn('photo cleanup failed', e));
   rebuildMemoLayer();
@@ -451,6 +458,7 @@ function confirmLine() {
       const activeId = getActiveLayerId();
       feature.properties = feature.properties || {};
       feature.properties._layer_id = activeId;
+      feature.properties._updated = new Date().toISOString();
       const memos = loadMemos();
       memos.push(feature);
       const result = saveMemos(memos);
