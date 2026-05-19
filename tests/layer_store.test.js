@@ -3,7 +3,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import {
   loadLayers, saveLayers, loadLayerMemos, saveLayerMemos,
   getActiveLayerId, setActiveLayerId, createLayer, renameLayer,
-  setLayerVisible, deleteLayer, findMemoLayerId, ensureMigrated, MAX_LAYERS
+  setLayerVisible, deleteLayer, findMemoLayerId, ensureMigrated, MAX_LAYERS,
+  importLayer
 } from '../js/layer_store.js';
 
 beforeEach(() => localStorage.clear());
@@ -92,5 +93,20 @@ describe('ensureMigrated', () => {
     const r = ensureMigrated();
     expect(r.migrated).toBe(false);
     expect(loadLayers().length).toBe(1);
+  });
+});
+
+describe('imported レイヤと MAX_LAYERS', () => {
+  it('imported レイヤは MAX_LAYERS 上限の対象外', () => {
+    for (let i = 0; i < MAX_LAYERS; i++) createLayer('L' + i);
+    // 作成レイヤは上限。importLayer は上限を超えても追加できる
+    const r = importLayer('imp-1', '取込レイヤ');
+    expect(r.ok).toBe(true);
+    expect(loadLayers().some((l) => l.id === 'imp-1' && l.imported === true)).toBe(true);
+  });
+  it('importLayer 後も createLayer は上限で弾かれる', () => {
+    for (let i = 0; i < MAX_LAYERS; i++) createLayer('L' + i);
+    importLayer('imp-2', '取込');
+    expect(createLayer('overflow').ok).toBe(false);
   });
 });

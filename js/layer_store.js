@@ -40,7 +40,8 @@ export function setActiveLayerId(id) {
 
 export function createLayer(name) {
   const layers = loadLayers();
-  if (layers.length >= MAX_LAYERS) return { ok: false, error: 'limit' };
+  const createdCount = layers.filter((l) => !l.imported).length;
+  if (createdCount >= MAX_LAYERS) return { ok: false, error: 'limit' };
   const layer = {
     id: uuid(),
     name: String(name || '').trim() || '新規レイヤ',
@@ -51,6 +52,23 @@ export function createLayer(name) {
   const r = saveLayers(layers);
   if (!r.ok) return { ok: false, error: r.error || 'save', message: r.message };
   if (getActiveLayerId() == null) setActiveLayerId(layer.id);
+  return { ok: true, layer };
+}
+
+// GCSから取り込んだレイヤをメタに追加（指定IDで・上限対象外）
+export function importLayer(layerId, name) {
+  const layers = loadLayers();
+  if (layers.some((l) => l.id === layerId)) return { ok: false, error: 'exists' };
+  const layer = {
+    id: layerId,
+    name: String(name || '').trim() || '取込レイヤ',
+    visible: true,
+    createdAt: new Date().toISOString(),
+    imported: true
+  };
+  layers.push(layer);
+  const r = saveLayers(layers);
+  if (!r.ok) return { ok: false, error: r.error || 'save', message: r.message };
   return { ok: true, layer };
 }
 
