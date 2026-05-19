@@ -1,10 +1,10 @@
 // mori-field-gis/js/layer_panel.js
 import {
   loadLayers, createLayer, renameLayer, setLayerVisible, deleteLayer,
-  getActiveLayerId, setActiveLayerId, loadLayerMemos, MAX_LAYERS
+  getActiveLayerId, setActiveLayerId, loadLayerMemos, MAX_LAYERS, importLayer
 } from './layer_store.js';
 import { rebuildMemoLayer } from './register.js';
-import { deleteLayerRemote, triggerLayerSync } from './sync.js';
+import { deleteLayerRemote, triggerLayerSync, listRemoteLayers, pullLayer } from './sync.js';
 import { showToast } from './toast.js';
 
 function updateActiveLayerLabel() {
@@ -95,5 +95,36 @@ export function initLayerPanel() {
     }
     renderLayerList();
     updateActiveLayerLabel();
+  });
+
+  document.getElementById('layer-import-btn')?.addEventListener('click', async () => {
+    showToast('GCSのレイヤ一覧を取得中…');
+    let remote;
+    try {
+      remote = await listRemoteLayers();
+    } catch (e) {
+      showToast('一覧取得に失敗しました', 'error');
+      return;
+    }
+    const haveIds = loadLayers().map((l) => l.id);
+    const candidates = remote.filter((r) => haveIds.indexOf(r.layerId) === -1);
+    if (candidates.length === 0) {
+      showToast('取り込めるレイヤがありません（すべて取込済）', 'warning');
+      return;
+    }
+    // 1件ずつ confirm で取り込み確認（シンプル方式）
+    for (const cand of candidates) {
+      const label = cand.name + '（' + (cand.device || '?') + ' / ' + (cand.featureCount || 0) + '件）';
+      if (confirm('取り込みますか？\n' + label)) {
+        const r = importLayer(cand.layerId, cand.name);
+        if (r.ok) {
+          try { await pullLayer(cand.layerId); } catch (e) { console.warn('pull after import failed', e); }
+        }
+      }
+    }
+    renderLayerList();
+    updateActiveLayerLabel();
+    rebuildMemoLayer();
+    showToast('取り込みが完了しました', 'success');
   });
 }
