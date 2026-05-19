@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { getActiveLayerId, loadLayerMemos, saveLayerMemos } from './layer_store.js';
 
 export function loadJSON(key, fallback = null) {
   try {
@@ -23,12 +24,17 @@ export function saveJSON(key, value) {
   }
 }
 
+// 作業中レイヤのメモを返す（複数レイヤ化 v1.4.0）
 export function loadMemos() {
-  return loadJSON(CONFIG.storageKeys.memos, []);
+  const id = getActiveLayerId();
+  if (!id) return [];
+  return loadLayerMemos(id);
 }
 
 export function saveMemos(memos) {
-  return saveJSON(CONFIG.storageKeys.memos, memos);
+  const id = getActiveLayerId();
+  if (!id) return { ok: false, error: 'no-active-layer', message: '作業中レイヤがありません' };
+  return saveLayerMemos(id, memos);
 }
 
 export function getAuthor() {
