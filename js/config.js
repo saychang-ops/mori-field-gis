@@ -53,7 +53,13 @@ export const CONFIG = {
   },
 
   api: {
-    geocodeEndpoint: '/api/geocode'
+    geocodeEndpoint: '/api/geocode',
+    syncEndpoint: 'https://mori-machi-bot-v2-988875146168.asia-northeast1.run.app'
+  },
+
+  layer: {
+    maxCount: 5,
+    defaultName: '現場メモ'
   },
 
   iconPalette: [
@@ -68,5 +74,5 @@ export const CONFIG = {
   lineStyles: ['solid', 'dashed', 'dotted'],
   lineWidths: [2, 4, 6],
 
-  version: 'v1.3.6'
+  version: 'v1.4.0'
 };
