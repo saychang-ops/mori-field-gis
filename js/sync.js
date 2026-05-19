@@ -134,6 +134,12 @@ export async function triggerLayerSync(layerId) {
   }
 }
 
+// gcs:写真参照を data URL で取得
+export async function getRemotePhotoDataUrl(layerId, photoId) {
+  const r = await postAction({ action: 'getPhoto', layerId, photoId });
+  return r && r.dataUrl;
+}
+
 // GCS上のレイヤ一覧を取得
 export async function listRemoteLayers() {
   const r = await postAction({ action: 'listLayers' });

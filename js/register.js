@@ -6,7 +6,7 @@ import { showToast } from './toast.js';
 import { setTownLayersInteractive } from './layers.js';
 import { getPhotoUrl, deletePhotosByMemoId, clearAll as clearAllPhotos } from './photo_store.js';
 import { loadLayers, loadLayerMemos, saveLayerMemos, getActiveLayerId, findMemoLayerId } from './layer_store.js';
-import { triggerLayerSync } from './sync.js';
+import { triggerLayerSync, getRemotePhotoDataUrl } from './sync.js';
 
 let memoLayerGroup = null;
 let memoRenderer = null;
@@ -30,6 +30,14 @@ export function initMemoLayer(map) {
       } else if (ref.startsWith('idb:')) {
         try {
           img.src = await getPhotoUrl(ref);
+        } catch (_) {
+          img.alt = '写真読込失敗';
+          img.style.background = '#fee';
+        }
+      } else if (ref.startsWith('gcs:')) {
+        const parts = ref.split(':');
+        try {
+          img.src = await getRemotePhotoDataUrl(parts[1], parts[2]);
         } catch (_) {
           img.alt = '写真読込失敗';
           img.style.background = '#fee';
@@ -88,6 +96,15 @@ function showLightboxImage() {
     const idxAtCall = lightboxIndex;
     getPhotoUrl(ref).then(url => {
       if (idxAtCall === lightboxIndex) imgEl.src = url;
+    }).catch(() => {
+      if (idxAtCall === lightboxIndex) imgEl.alt = '写真読込失敗';
+    });
+  } else if (typeof ref === 'string' && ref.startsWith('gcs:')) {
+    imgEl.src = '';
+    const parts = ref.split(':');
+    const idxAtCall = lightboxIndex;
+    getRemotePhotoDataUrl(parts[1], parts[2]).then(url => {
+      if (idxAtCall === lightboxIndex) imgEl.src = url || '';
     }).catch(() => {
       if (idxAtCall === lightboxIndex) imgEl.alt = '写真読込失敗';
     });
