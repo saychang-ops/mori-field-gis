@@ -22,6 +22,7 @@
     </div>
     <button id="share-btn" aria-label="共有" title="エクスポート">⬆</button>
     <button id="clear-all-btn" aria-label="全削除" title="現場メモ全削除">🗑</button>
+    <button id="active-layer-btn" class="active-layer-btn">作業中: <span id="active-layer-name">—</span> ▾</button>
   </header>
 
   <div id="line-mode-bar" class="hidden">
@@ -117,6 +118,18 @@
     <span>森町建設課GIS (Field) <span id="version-label">v1.3.6</span></span>
     <span id="memo-count">0件</span>
   </footer>
+
+  <div id="layer-sheet" class="layer-sheet hidden">
+    <div class="layer-sheet-backdrop"></div>
+    <div class="layer-sheet-panel">
+      <div class="layer-sheet-header">
+        <span>レイヤ管理</span>
+        <button id="layer-sheet-close" class="layer-sheet-close">×</button>
+      </div>
+      <div id="layer-list" class="layer-list"></div>
+      <button id="layer-add-btn" class="layer-add-btn">＋ レイヤを追加</button>
+    </div>
+  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script type="module" src="/js/app.js"></script>
