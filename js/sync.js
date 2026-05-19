@@ -1,7 +1,7 @@
 // mori-field-gis/js/sync.js
 import { loadJSON, saveJSON } from './storage.js';
 import { CONFIG } from './config.js';
-import { loadLayers, loadLayerMemos } from './layer_store.js';
+import { loadLayers, loadLayerMemos, saveLayerMemos } from './layer_store.js';
 import { getPhotoAsDataUrl } from './photo_store.js';
 
 const K = { photoMap: 'mori_field_photo_map', queue: 'mori_field_sync_queue' };
@@ -132,6 +132,38 @@ export async function triggerLayerSync(layerId) {
     enqueueLayer(layerId);
     return { ok: false, queued: true, error: e.message };
   }
+}
+
+// GCS上のレイヤ一覧を取得
+export async function listRemoteLayers() {
+  const r = await postAction({ action: 'listLayers' });
+  return (r && r.layers) || [];
+}
+
+// 1レイヤをGCSから取得し、ローカルメモにマージして保存
+export async function pullLayer(layerId) {
+  const fc = await postAction({ action: 'getLayer', layerId });
+  if (!fc || !Array.isArray(fc.features)) return { ok: false };
+  const local = loadLayerMemos(layerId);
+  const merged = mergeLayerFeatures(local, fc.features);
+  saveLayerMemos(layerId, merged);
+  return { ok: true, count: merged.length };
+}
+
+// スマホが保持する全レイヤをGCSから取得・マージ
+export async function pullAllLayers() {
+  const layers = loadLayers();
+  const result = { pulled: 0, failed: 0 };
+  for (const layer of layers) {
+    try {
+      const r = await pullLayer(layer.id);
+      if (r.ok) result.pulled++;
+    } catch (e) {
+      console.warn('[sync] pullLayer 失敗:', layer.id, e);
+      result.failed++;
+    }
+  }
+  return result;
 }
 
 // 双方向同期: ローカルとリモートのフィーチャを _id 単位でマージ（_updated 新しい方を採用）
