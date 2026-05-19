@@ -5,6 +5,8 @@ import { loadMemos, saveMemos } from './storage.js';
 import { showToast } from './toast.js';
 import { setTownLayersInteractive } from './layers.js';
 import { getPhotoUrl, deletePhotosByMemoId, clearAll as clearAllPhotos } from './photo_store.js';
+import { loadLayers, loadLayerMemos, saveLayerMemos, getActiveLayerId, findMemoLayerId } from './layer_store.js';
+import { triggerLayerSync } from './sync.js';
 
 let memoLayerGroup = null;
 let memoRenderer = null;
@@ -12,8 +14,7 @@ let memoRenderer = null;
 export function initMemoLayer(map) {
   memoRenderer = L.svg({ pane: 'memoPane' });
   memoLayerGroup = L.layerGroup().addTo(map);
-  const memos = loadMemos();
-  memos.forEach(renderMemo);
+  loadVisibleMemos().forEach(renderMemo);
   updateMemoCount();
   initLightbox();
 
@@ -140,14 +141,30 @@ function renderMemo(feature) {
   layer.addTo(memoLayerGroup);
 }
 
+// visible=true の全レイヤのメモを集めて返す（各メモに _layer_id を保証）
+function loadVisibleMemos() {
+  const out = [];
+  loadLayers().forEach((layer) => {
+    if (!layer.visible) return;
+    loadLayerMemos(layer.id).forEach((m) => {
+      m.properties = m.properties || {};
+      m.properties._layer_id = layer.id;
+      out.push(m);
+    });
+  });
+  return out;
+}
+
 function buildPopupHtml(feature) {
   const p = feature.properties;
+  const layer = loadLayers().find((l) => l.id === p._layer_id);
+  const layerName = layer ? layer.name : '現場メモ';
   const photos = (p.photos || [])
     .map((src, idx) => `<img data-photo-ref="${escapeHtml(src)}" data-photo-idx="${idx}" alt="写真" />`)
     .join('');
   return `
     <div class="memo-popup" data-id="${p._id}">
-      <b>現場メモ</b><br>
+      <b>${escapeHtml(layerName)}</b><br>
       <b>${escapeHtml(p.name || '')}</b><br>
       ${escapeHtml(p.remarks || '').replace(/\n/g, '<br>')}<br>
       <small>${escapeHtml(p.date || '')} ${escapeHtml(p.person || '')}</small><br>
@@ -169,6 +186,9 @@ function openMemoFormForPoint(latlng) {
   openMemoForm({
     geometry: { type: 'Point', coordinates: [latlng.lng, latlng.lat] },
     onSave: (feature) => {
+      const activeId = getActiveLayerId();
+      feature.properties = feature.properties || {};
+      feature.properties._layer_id = activeId;
       const memos = loadMemos();
       memos.push(feature);
       const result = saveMemos(memos);
@@ -179,6 +199,9 @@ function openMemoFormForPoint(latlng) {
       renderMemo(feature);
       updateMemoCount();
       showToast('保存しました', 'success');
+      triggerLayerSync(activeId).then((r) => {
+        if (r.queued) showToast('オフライン: 後で自動送信します', 'warning');
+      });
     }
   });
 }
@@ -258,56 +281,68 @@ function updateMemoCount() {
 }
 
 export function editMemoById(id) {
-  const memos = loadMemos();
-  const feature = memos.find(m => m.properties._id === id);
+  const layerId = findMemoLayerId(id);
+  if (!layerId) return;
+  const memos = loadLayerMemos(layerId);
+  const feature = memos.find((m) => m.properties._id === id);
   if (!feature) return;
   openMemoForm({
     geometry: feature.geometry,
     editing: feature,
     onSave: (updated) => {
-      const idx = memos.findIndex(m => m.properties._id === id);
+      updated.properties = updated.properties || {};
+      updated.properties._layer_id = layerId;
+      const idx = memos.findIndex((m) => m.properties._id === id);
       memos[idx] = updated;
-      saveMemos(memos);
+      saveLayerMemos(layerId, memos);
       rebuildMemoLayer();
       showToast('更新しました', 'success');
+      triggerLayerSync(layerId).then((r) => {
+        if (r.queued) showToast('オフライン: 後で自動送信します', 'warning');
+      });
     }
   });
 }
 
 export function deleteMemoById(id) {
   if (!confirm('このメモを削除しますか？')) return;
-  const memos = loadMemos().filter(m => m.properties._id !== id);
-  saveMemos(memos);
+  const layerId = findMemoLayerId(id);
+  if (!layerId) return;
+  const memos = loadLayerMemos(layerId).filter((m) => m.properties._id !== id);
+  saveLayerMemos(layerId, memos);
   deletePhotosByMemoId(id).catch((e) => console.warn('photo cleanup failed', e));
   rebuildMemoLayer();
   showToast('削除しました', 'success');
+  triggerLayerSync(layerId).then((r) => {
+    if (r.queued) showToast('オフライン: 後で自動送信します', 'warning');
+  });
 }
 
-function rebuildMemoLayer() {
+export function rebuildMemoLayer() {
   memoLayerGroup.clearLayers();
-  loadMemos().forEach(renderMemo);
+  loadVisibleMemos().forEach(renderMemo);
   updateMemoCount();
   getMap().closePopup();
 }
 
 export function clearAllMemos() {
+  const activeId = getActiveLayerId();
+  const layer = loadLayers().find((l) => l.id === activeId);
   const count = loadMemos().length;
-  if (count === 0) {
+  if (!layer || count === 0) {
     showToast('削除するメモがありません', 'warning');
     return;
   }
-  if (!confirm(`現場メモ ${count}件をすべて削除しますか？\n元に戻せません。`)) return;
+  if (!confirm(`レイヤ「${layer.name}」の ${count}件 をすべて削除しますか？\n元に戻せません。`)) return;
   if (!confirm('本当に削除しますか？')) return;
   const result = saveMemos([]);
   if (!result.ok) {
     showToast('削除失敗: ' + result.message, 'error');
     return;
   }
-  clearAllPhotos().catch((e) => console.warn('photo clearAll failed', e));
-  memoLayerGroup.clearLayers();
-  updateMemoCount();
-  getMap().closePopup();
+  rebuildMemoLayer();
   showToast(`${count}件のメモを削除しました`, 'success');
+  triggerLayerSync(activeId);
 }
 
 function buildShapeDivIcon(shape, color) {
@@ -413,6 +448,9 @@ function confirmLine() {
   openMemoForm({
     geometry: { type: 'LineString', coordinates: coords },
     onSave: (feature) => {
+      const activeId = getActiveLayerId();
+      feature.properties = feature.properties || {};
+      feature.properties._layer_id = activeId;
       const memos = loadMemos();
       memos.push(feature);
       const result = saveMemos(memos);
@@ -421,6 +459,9 @@ function confirmLine() {
       updateMemoCount();
       cleanupLineMode();
       showToast('線を保存しました', 'success');
+      triggerLayerSync(activeId).then((r) => {
+        if (r.queued) showToast('オフライン: 後で自動送信します', 'warning');
+      });
     },
     onCancel: () => {
       cleanupLineMode();
