@@ -17,8 +17,6 @@ export function initMap() {
     maxZoom: CONFIG.maxZoom
   }).setView(center, zoom);
 
-  L.control.zoom({ position: 'topleft' }).addTo(mapInstance);
-
   mapInstance.createPane('townRoadsPane');
   mapInstance.getPane('townRoadsPane').style.zIndex = 440;
 

@@ -94,18 +94,55 @@ async function main() {
       .catch((e) => console.warn('queue process failed:', e));
   });
 
-  // 双方向同期: 起動時とフォアグラウンド復帰時にGCSから取得
+  // 双方向同期: 起動時とフォアグラウンド復帰時にGCSから取得。tombstoneのみの変化でも UI 反映するため pulled の閾値判定は外す
   function pullAndRefresh(reason) {
-    pullAllLayers()
+    return pullAllLayers()
       .then((r) => {
-        if (r.pulled > 0) { rebuildMemoLayer(); }
+        rebuildMemoLayer();
+        return r;
       })
-      .catch((e) => console.warn('pullAllLayers failed (' + reason + '):', e));
+      .catch((e) => {
+        console.warn('pullAllLayers failed (' + reason + '):', e);
+        throw e;
+      });
   }
-  pullAndRefresh('startup');
+  window.__pullAndRefresh = pullAndRefresh;  // RefreshControl から再利用
+  pullAndRefresh('startup').catch(() => {});
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') pullAndRefresh('foreground');
+    if (document.visibilityState === 'visible') pullAndRefresh('foreground').catch(() => {});
   });
+
+  // 左上の更新ボタン
+  addRefreshControl(map);
+}
+
+function addRefreshControl(map) {
+  const RefreshControl = L.Control.extend({
+    onAdd: function() {
+      const btn = L.DomUtil.create('button', 'leaflet-bar refresh-control');
+      btn.type = 'button';
+      btn.title = '共有レイヤを更新';
+      btn.setAttribute('aria-label', '共有レイヤを更新');
+      btn.innerHTML = '↻';  // ↻
+      L.DomEvent.disableClickPropagation(btn);
+      L.DomEvent.on(btn, 'click', async (ev) => {
+        ev.preventDefault();
+        if (btn.classList.contains('spinning')) return;
+        btn.classList.add('spinning');
+        try {
+          const r = await (window.__pullAndRefresh ? window.__pullAndRefresh('manual') : Promise.resolve({ pulled: 0 }));
+          if (r && r.pulled > 0) showToast(`${r.pulled}件のレイヤを取得しました`, 'success');
+          else showToast('最新です', 'success');
+        } catch (e) {
+          showToast('同期失敗（オフライン？）', 'error');
+        } finally {
+          btn.classList.remove('spinning');
+        }
+      });
+      return btn;
+    }
+  });
+  map.addControl(new RefreshControl({ position: 'topleft' }));
 }
 
 function wireFab(map) {

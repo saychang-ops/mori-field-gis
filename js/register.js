@@ -242,7 +242,6 @@ export function startPointMode() {
     pointHandlersWired = true;
   }
   updatePointBarState();
-  showToast('地図をタップして登録地点を選択', 'success');
 }
 
 function updatePointBarState() {
@@ -418,7 +417,6 @@ export function startLineMode() {
     lineHandlersWired = true;
   }
   updateLineBarState();
-  showToast('地図をタップして頂点を追加', 'success');
 }
 
 function updateLineBarState() {

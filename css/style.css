@@ -35,6 +35,25 @@ body {
   display: flex; flex-direction: column; gap: 10px;
   z-index: 400;
 }
+
+/* 左上「更新」ボタン: Leaflet 標準ズームの代替 */
+.leaflet-bar.refresh-control {
+  width: 34px; height: 34px;
+  background: #fff; border: 1px solid rgba(0,0,0,.2); border-radius: 4px;
+  font-size: 22px; line-height: 30px; text-align: center;
+  cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #333;
+}
+.leaflet-bar.refresh-control:hover { background: #f5f5f5; }
+.leaflet-bar.refresh-control:active { background: #e0e0e0; }
+.leaflet-bar.refresh-control.spinning {
+  pointer-events: none; opacity: 0.7;
+  animation: refresh-spin 1s linear infinite;
+}
+@keyframes refresh-spin {
+  to { transform: rotate(360deg); }
+}
 #fab-stack button {
   width: 48px; height: 48px; border-radius: 50%;
   background: #fff; border: none; box-shadow: 0 2px 6px rgba(0,0,0,0.3);

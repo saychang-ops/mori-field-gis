@@ -12,17 +12,37 @@ export function calcResizedDimensions(origW, origH, maxLongEdge) {
   };
 }
 
+// createImageBitmap が使える環境では EXIF auto-rotate 付きで利用（iOS Safari/Chrome の HEIC 画像対応）。
+// 失敗時は Image() + FileReader にフォールバック。
+async function loadBitmap(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      return await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch (_) {
+      // fall through to legacy path
+    }
+  }
+  return loadImage(file);
+}
+
 async function resizeToCanvas(file) {
-  const img = await loadImage(file);
-  const { width, height } = calcResizedDimensions(
-    img.naturalWidth, img.naturalHeight,
-    CONFIG.photo.maxLongEdgePx
-  );
+  const bitmap = await loadBitmap(file);
+  const srcW = bitmap.naturalWidth || bitmap.width || 0;
+  const srcH = bitmap.naturalHeight || bitmap.height || 0;
+  if (!srcW || !srcH) {
+    if (typeof bitmap.close === 'function') bitmap.close();
+    throw new Error('画像寸法を取得できませんでした (HEIC/未対応形式の可能性)');
+  }
+  const { width, height } = calcResizedDimensions(srcW, srcH, CONFIG.photo.maxLongEdgePx);
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0, width, height);
+  ctx.drawImage(bitmap, 0, 0, width, height);
+  if (typeof bitmap.close === 'function') bitmap.close();
+  if (typeof console !== 'undefined' && console.info) {
+    console.info('[camera] resized %dx%d -> %dx%d', srcW, srcH, width, height);
+  }
   return canvas;
 }
 
